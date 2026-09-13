@@ -64,7 +64,7 @@
     "tough-cookie": "6.0.2"
   },
   "devDependencies": {
-    "@types/node": "22.20.2",
+    "@types/node": "26.5.1",
     "@vitest/coverage-v8": "5.0.0",
     "@wordpress/env": "11.15.0",
     "prettier": "3.9.6",
