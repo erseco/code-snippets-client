@@ -52,13 +52,16 @@ it("follows the Cassify callback and preserves Apereo hidden form fields", async
       service = url.searchParams.get("service")!;
       res.setHeader("set-cookie", "cas=one; Path=/cas");
       res.end(
-        `<form action="/cas/login?service=${encodeURIComponent(service)}" method='post'><input value='token&amp;value' name='execution' type='hidden'><input name='lt' type='hidden' value='LT-1'><input name='password' type='password'></form>`,
+        `<form><input name='unrelated' type='hidden' value='ignore'></form><form action="/cas/login?service=${encodeURIComponent(service)}" method='post'><input value='token&amp;value' name='execution' type='hidden'><input name='lt' type='hidden' value='LT-1'><input name='disabled' type='hidden' disabled value='ignore'><input type='hidden' value='nameless'><input name='empty' type='hidden'><input name='visible' value='ignore'><div><input name='password' type='PASSWORD'></div></form>`,
       );
     } else {
       const p = new URLSearchParams(await body(req));
       expect(req.headers.cookie).toBe("cas=one");
       expect(p.get("execution")).toBe("token&value");
       expect(p.get("lt")).toBe("LT-1");
+      expect(p.get("empty")).toBe("");
+      for (const name of ["unrelated", "disabled", "visible"])
+        expect(p.has(name)).toBe(false);
       expect(p.get("username")).toBe("person");
       expect(p.get("_eventId")).toBe("submit");
       res.writeHead(303, { location: service + "&ticket=ST-test" });
@@ -268,4 +271,20 @@ it("times out without leaking URLs or passwords", async () => {
     code: "NETWORK",
     message: "Request failed or timed out",
   });
+});
+
+it("rejects a password input outside a form without posting credentials", async () => {
+  let posts = 0;
+  const s = await server((req, res) => {
+    if (req.method === "POST") posts++;
+    res.end('<div><input type="password"></div>');
+  });
+  stops.push(s.close);
+  const client = new CodeSnippetsClient({
+    baseUrl: s.url,
+    allowInsecureHttp: true,
+    auth: { type: "wordpress", username: "u", password: "p" },
+  });
+  await expect(client.get(7)).rejects.toThrow("Password form missing");
+  expect(posts).toBe(0);
 });

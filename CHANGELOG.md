@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.3 — 2026-09-13
+
+- Replace Cheerio with its existing htmlparser2 parser for login forms, removing
+  15 transitive packages and the deprecated whatwg-encoding installation warning.
+- Keep hidden-field decoding, form selection and cross-origin credential guards;
+  add regression checks for disabled fields and password inputs outside forms.
+- Stop Node from consuming the CLI's --env-file option before CLI validation,
+  and exercise the npm launcher on Windows, macOS and Linux.
+- Reject deprecated runtime dependencies in the installed-package check.
+
 ## [0.1.2] — 2026-09-13
 
 - Start CAS login from the admin URL to avoid Cassify 2.4.9 callback cookie loops.

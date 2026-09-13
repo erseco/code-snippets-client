@@ -1,4 +1,4 @@
-import { load } from "cheerio/slim";
+import { DomUtils, parseDocument } from "htmlparser2";
 import { CodeSnippetsError } from "./errors.js";
 import { checkedUrl, Session } from "./session.js";
 import type { Authentication } from "./types.js";
@@ -16,25 +16,32 @@ async function submitLogin(
       "AUTH",
       "Login form not found on the configured origin",
     );
-  const $ = load(await response.text());
-  const form = $('input[type="password"]').first().closest("form");
-  if (!form.length)
+  const document = parseDocument(await response.text());
+  const password = DomUtils.findOne(
+    (node) =>
+      node.name === "input" && node.attribs.type?.toLowerCase() === "password",
+    document.children,
+  );
+  let form = password?.parent;
+  while (form && !(form.type === "tag" && form.name === "form"))
+    form = form.parent;
+  if (!form || form.type !== "tag")
     throw new CodeSnippetsError(
       "AUTH",
       "Password form missing; interactive authentication may be required",
     );
   const action = checkedUrl(
-    new URL(form.attr("action") || response.url, response.url).href,
+    new URL(form.attribs.action || response.url, response.url).href,
     allowHttp,
   );
   if (action.origin !== expected.origin)
     throw new CodeSnippetsError("AUTH", "Cross-origin login form refused");
   const data = new URLSearchParams();
-  form.find("input[name]").each((_, element) => {
-    const field = $(element);
-    if (field.attr("type") === "hidden" && !field.is("[disabled]"))
-      data.set(field.attr("name")!, field.attr("value") ?? "");
-  });
+  for (const field of DomUtils.getElementsByTagName("input", form.children)) {
+    const { name, type, value, disabled } = field.attribs;
+    if (name !== undefined && type === "hidden" && disabled === undefined)
+      data.set(name, value ?? "");
+  }
   for (const [name, value] of Object.entries(fields)) data.set(name, value);
   const result = await session.request(action, { method: "POST", body: data });
   if (!result.ok) {

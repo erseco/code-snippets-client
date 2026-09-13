@@ -7,7 +7,7 @@ One npm package contains the library and CLI. `src/client.ts` adapts the REST AP
 and redirects. The CLI lives in `src/cli.ts`, with its entry point in `src/bin.ts`.
 
 The client uses Node's native `fetch` and TypeScript compiled with `tsc`, without
-a bundler. `tough-cookie` implements cookie rules and `cheerio/slim` parses HTML
+a bundler. `tough-cookie` implements cookie rules and `htmlparser2` parses HTML
 forms, avoiding custom cookie and attribute parsers. The package is ESM and Node-only.
 It includes no plugin PHP source, institutional configuration or backup data.
 
