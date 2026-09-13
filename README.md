@@ -11,6 +11,8 @@ REST API. List, create, update, activate, deactivate and delete snippets from No
 using application passwords, WordPress login, existing sessions or CAS forms.
 An independent, unofficial project. Not the WPCode plugin.
 
+[![Coverage treemap](https://codecov.io/gh/erseco/code-snippets-client/graphs/tree.svg?token=IbJ7WynHMP)](https://codecov.io/gh/erseco/code-snippets-client)
+
 ## Install
 
 Requires **Node.js 22.14 or later**. Ships as ESM with compiled JavaScript and types.
