@@ -1,0 +1,268 @@
+import { afterEach, describe, expect, it } from "vitest";
+import { CodeSnippetsClient, CodeSnippetsError } from "../src/index.js";
+import { server, json, body, sample } from "./helpers.js";
+const stops: (() => Promise<void>)[] = [];
+afterEach(async () => {
+  await Promise.all(stops.splice(0).map((f) => f()));
+});
+async function setup(handler: Parameters<typeof server>[0]) {
+  const s = await server(handler);
+  stops.push(s.close);
+  return new CodeSnippetsClient({
+    baseUrl: s.url + "/subsite",
+    auth: { type: "application-password", username: "u", password: "p" },
+    allowInsecureHttp: true,
+  });
+}
+
+describe("Code Snippets REST contract", () => {
+  it("lists, queries and preserves subsite query routing", async () => {
+    const client = await setup((req, res) => {
+      const u = new URL(req.url!, "http://test");
+      expect(u.pathname).toBe("/subsite/");
+      expect(u.searchParams.get("rest_route")).toBe(
+        "/code-snippets/v1/snippets",
+      );
+      expect(u.searchParams.get("per_page")).toBe("50");
+      expect(u.searchParams.get("page")).toBe("2");
+      expect(u.searchParams.get("search")).toBe("a & b");
+      expect(req.headers.authorization).toBe("Basic dTpw");
+      json(res, [{ ...sample, code: "a\r\nb" }]);
+    });
+    expect(
+      (
+        await client.list({
+          page: 2,
+          perPage: 50,
+          search: "a & b",
+          status: "active",
+        })
+      )[0]?.code,
+    ).toBe("a\nb");
+  });
+  it("creates inactive by default and preserves update metadata", async () => {
+    const posted: Record<string, unknown>[] = [];
+    const c = await setup(async (req, res) => {
+      if (req.method === "GET") return json(res, sample);
+      const p = JSON.parse(await body(req)) as Record<string, unknown>;
+      posted.push(p);
+      json(res, { ...sample, ...p });
+    });
+    expect((await c.create({ name: "New", code: "new" })).active).toBe(false);
+    await c.update(7, { code: "new" });
+    expect(posted[1]).toMatchObject({
+      name: "Demo",
+      tags: ["keep"],
+      priority: 8,
+      desc: "Keep",
+      active: true,
+    });
+  });
+  it("restores an active snippet deactivated on save exactly once", async () => {
+    const paths: string[] = [];
+    const c = await setup((req, res) => {
+      paths.push(req.url!);
+      json(res, {
+        ...sample,
+        active: req.method === "GET" || req.url!.includes("activate"),
+      });
+    });
+    expect((await c.update(7, { code: "function changed() {}" })).active).toBe(
+      true,
+    );
+    expect(paths).toHaveLength(4);
+  });
+  it("never implicitly rearms single-use even across a scope change", async () => {
+    const writes: Record<string, unknown>[] = [];
+    const c = await setup(async (req, res) => {
+      if (req.method === "GET")
+        return json(res, { ...sample, scope: "single-use" });
+      const p = JSON.parse(await body(req));
+      writes.push(p);
+      json(res, { ...sample, ...p, active: false });
+    });
+    await c.update(7, { code: "once" });
+    await c.update(7, { scope: "global" });
+    expect(writes).toHaveLength(2);
+    expect(writes.every((p) => !("active" in p))).toBe(true);
+  });
+  it("does not activate inactive snippets and handles explicit state", async () => {
+    const c = await setup(async (req, res) => {
+      const p = req.method === "POST" ? JSON.parse(await body(req)) : {};
+      json(res, { ...sample, active: false, ...p });
+    });
+    expect((await c.update(7, { code: "new" })).active).toBe(false);
+    expect((await c.update(7, { active: true })).active).toBe(true);
+    expect((await c.deactivate(7)).active).toBe(false);
+  });
+  it("reports refused activation and code errors without leaking source", async () => {
+    const c = await setup((req, res) =>
+      json(res, {
+        ...sample,
+        active: false,
+        code_error: req.url!.includes("deactivate")
+          ? { message: "private source" }
+          : null,
+      }),
+    );
+    await expect(c.activate(7)).rejects.toMatchObject({ code: "STATE" });
+    const broken = await setup((req, res) =>
+      json(res, { ...sample, code_error: { message: "private source" } }),
+    );
+    await expect(broken.deactivate(7)).rejects.toThrow("code error");
+    await expect(
+      c.create({ name: "x", code: "secret", active: true }),
+    ).rejects.toMatchObject({ code: "STATE" });
+  });
+  it("accepts consumed explicit single-use activations", async () => {
+    const c = await setup((req, res) =>
+      json(res, { ...sample, scope: "single-use", active: false }),
+    );
+    expect((await c.activate(7)).active).toBe(false);
+  });
+  it("supports trash, permanent deletion and restore", async () => {
+    let calls = 0;
+    const c = await setup((req, res) => {
+      calls++;
+      if (calls === 2) {
+        res.writeHead(204);
+        res.end();
+      } else json(res, { ...sample, trashed: calls === 1 });
+    });
+    expect((await c.delete(7))?.trashed).toBe(true);
+    expect(await c.delete(7)).toBeNull();
+    expect((await c.restore(7)).trashed).toBe(false);
+  });
+  it("sends network in query and write body", async () => {
+    const s = await server(async (req, res) => {
+      expect(req.url).toContain("network=true");
+      if (req.method === "POST")
+        expect(JSON.parse(await body(req)).network).toBe(true);
+      json(res, { ...sample, network: true, active: false });
+    });
+    stops.push(s.close);
+    const c = new CodeSnippetsClient({
+      baseUrl: s.url,
+      network: true,
+      allowInsecureHttp: true,
+      auth: { type: "session", cookie: "wp=ok", nonce: "abcdef1234" },
+    });
+    await c.get(7);
+    await c.create({ name: "x", code: "x" });
+  });
+  it.each([401, 403, 404, 500])(
+    "returns safe HTTP errors (%s)",
+    async (status) => {
+      const c = await setup((req, res) =>
+        json(res, { secret: "never print me" }, status),
+      );
+      await expect(c.get(7)).rejects.toMatchObject({ status });
+      await expect(c.get(7)).rejects.not.toThrow("never print");
+    },
+  );
+  it("rejects HTML, invalid collections and invalid snippets", async () => {
+    let n = 0;
+    const c = await setup((req, res) => {
+      n++;
+      if (n === 1) {
+        res.end("<html>secret</html>");
+      } else json(res, n === 2 ? {} : [{}]);
+    });
+    await expect(c.get(7)).rejects.toMatchObject({ code: "RESPONSE" });
+    await expect(c.list()).rejects.toMatchObject({ code: "RESPONSE" });
+    await expect(c.list()).rejects.toMatchObject({ code: "RESPONSE" });
+  });
+  it("validates input before making requests", async () => {
+    const c = await setup(() => {
+      throw Error("should not request");
+    });
+    for (const id of [0, -1, NaN, 1.5])
+      await expect(c.get(id)).rejects.toMatchObject({ code: "VALIDATION" });
+    await expect(c.create({ name: "", code: "x" })).rejects.toMatchObject({
+      code: "VALIDATION",
+    });
+    await expect(c.update(7, {})).rejects.toMatchObject({ code: "VALIDATION" });
+    await expect(c.update(7, { priority: -1 })).rejects.toMatchObject({
+      code: "VALIDATION",
+    });
+    await expect(c.update(7, { tags: [3] } as never)).rejects.toMatchObject({
+      code: "VALIDATION",
+    });
+    await expect(c.update(7, { unknown: true } as never)).rejects.toMatchObject(
+      { code: "VALIDATION" },
+    );
+    for (const options of [
+      { page: 0 },
+      { perPage: 101 },
+      { status: "bad" },
+      { nope: "bad" },
+    ])
+      await expect(c.list(options as never)).rejects.toMatchObject({
+        code: "VALIDATION",
+      });
+  });
+  it("validates configuration", () => {
+    const options = {
+      baseUrl: "https://example.test",
+      auth: {
+        type: "application-password" as const,
+        username: "x",
+        password: "x",
+      },
+    };
+    for (const baseUrl of [
+      "bad",
+      "http://example.test",
+      "https://u:p@example.test",
+      "https://example.test#x",
+      "https://example.test?q=x",
+    ])
+      expect(() => new CodeSnippetsClient({ ...options, baseUrl })).toThrow(
+        CodeSnippetsError,
+      );
+    expect(
+      () => new CodeSnippetsClient({ ...options, timeoutMs: 0 }),
+    ).toThrow();
+    expect(
+      () =>
+        new CodeSnippetsClient({ ...options, adminUrl: "https://other.test" }),
+    ).toThrow();
+    expect(
+      () =>
+        new CodeSnippetsClient({ ...options, auth: { type: "bad" } as never }),
+    ).toThrow();
+    expect(
+      () =>
+        new CodeSnippetsClient({
+          ...options,
+          auth: { type: "wordpress", username: "", password: "" },
+        }),
+    ).toThrow();
+  });
+});
+
+it("reads persisted state after empty activation bodies and HTTP 204 restoration", async () => {
+  let active = false;
+  const c = await setup((req, res) => {
+    if (req.method === "GET") return json(res, { ...sample, active });
+    if (req.url!.includes("restore")) {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+    active = !req.url!.includes("deactivate");
+    json(res, {});
+  });
+  expect((await c.activate(7)).active).toBe(true);
+  expect((await c.deactivate(7)).active).toBe(false);
+  expect((await c.restore(7)).trashed).toBe(false);
+});
+it("rejects null snippet bodies and invalid metadata responses", async () => {
+  const c = await setup((req, res) => json(res, null));
+  await expect(c.get(7)).rejects.toMatchObject({ code: "RESPONSE" });
+  await expect(c.create(null as never)).rejects.toMatchObject({
+    code: "VALIDATION",
+  });
+  const bad = await setup((req, res) => json(res, { ...sample, tags: [42] }));
+  await expect(bad.get(7)).rejects.toMatchObject({ code: "RESPONSE" });
+});
