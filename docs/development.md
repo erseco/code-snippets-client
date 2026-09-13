@@ -14,7 +14,11 @@ npm run test:integration
 HTTP tests use ephemeral loopback servers. `test:package` creates a tarball, validates
 its file allowlist, installs it in a temporary directory and tests the installed
 import and CLI. Run `npm run build` first when invoking the package test separately.
-CI retains coverage reports as artifacts.
+CI uploads LCOV to Codecov using GitHub OIDC, without a stored upload token, and
+retains coverage reports as artifacts. Codecov requires at least 90% project and
+patch coverage. Vitest independently enforces 95% lines, statements and functions,
+and 90% branches, so coverage remains enforced even without Codecov. Connect this
+repository to the Codecov GitHub App to display coverage checks on pull requests.
 
 `test:integration` starts `.wp-env.json`, exercises CRUD, metadata, activation,
 double evaluation, permissions, application passwords and single-use snippets. It

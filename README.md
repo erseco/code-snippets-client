@@ -1,6 +1,7 @@
 # Code Snippets Client
 
 [![CI](https://github.com/erseco/code-snippets-client/actions/workflows/ci.yml/badge.svg)](https://github.com/erseco/code-snippets-client/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/erseco/code-snippets-client/branch/main/graph/badge.svg)](https://codecov.io/gh/erseco/code-snippets-client)
 [![npm](https://img.shields.io/npm/v/@erseco/code-snippets-client)](https://www.npmjs.com/package/@erseco/code-snippets-client)
 [![Publish](https://github.com/erseco/code-snippets-client/actions/workflows/publish.yml/badge.svg)](https://github.com/erseco/code-snippets-client/actions/workflows/publish.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
