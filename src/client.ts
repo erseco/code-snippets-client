@@ -58,7 +58,7 @@ function snippet(value: unknown): Snippet {
     typeof s.scope !== "string" ||
     typeof s.desc !== "string" ||
     typeof s.network !== "boolean" ||
-    typeof s.trashed !== "boolean" ||
+    (s.trashed !== undefined && typeof s.trashed !== "boolean") ||
     !Number.isSafeInteger(s.priority) ||
     !Array.isArray(s.tags) ||
     !s.tags.every((t) => typeof t === "string")
@@ -295,7 +295,7 @@ export class CodeSnippetsClient {
     this.checkState(result, false);
     return result;
   }
-  /** The plugin moves to trash first; deleting an already trashed snippet is permanent. */
+  /** Trash a snippet. Newer plugin APIs also support deleting an already trashed snippet. */
   async delete(id: number): Promise<Snippet | null> {
     const result = await this.request(idPath(id), "DELETE");
     return result === null ? null : snippet(result);

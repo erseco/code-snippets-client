@@ -67,22 +67,28 @@ it("follows the Cassify callback and preserves Apereo hidden form fields", async
   });
   stops.push(cas.close);
   const wp = await server((req, res) => {
-    if (req.url === "/wp-login.php") {
+    if (req.url === "/wp-admin/" && !req.headers.cookie?.includes("admin=ok")) {
       res.writeHead(302, {
         location:
           cas.url +
           "/cas/login?service=" +
-          encodeURIComponent(wpUrl + "/?callback=1"),
+          encodeURIComponent(wpUrl + "/wp-admin/?callback=1"),
       });
       res.end();
     } else if (req.url!.includes("ticket=ST-test")) {
       expect(req.headers.cookie ?? "").not.toContain("cas=one");
-      res.writeHead(302, { "set-cookie": "wp=ok; Path=/", location: "/" });
+      res.writeHead(302, {
+        "set-cookie": ["wp=ok; Path=/", "admin=ok; Path=/wp-admin"],
+        location: "/wp-admin/",
+      });
       res.end();
     } else if (req.url!.includes("rest_route")) {
       expect(req.headers.cookie).toContain("wp=ok");
       json(res, [sample]);
-    } else res.end(noncePage);
+    } else {
+      expect(req.headers.cookie).toContain("admin=ok");
+      res.end(noncePage);
+    }
   });
   stops.push(wp.close);
   wpUrl = wp.url;
@@ -97,7 +103,7 @@ it("follows the Cassify callback and preserves Apereo hidden form fields", async
     },
   });
   expect(await c.list()).toHaveLength(1);
-  expect(service).toBe(wpUrl + "/?callback=1");
+  expect(service).toBe(wpUrl + "/wp-admin/?callback=1");
   // Also supports an explicit service without the initial WordPress redirect.
   const direct = new CodeSnippetsClient({
     baseUrl: wp.url,
@@ -107,7 +113,7 @@ it("follows the Cassify callback and preserves Apereo hidden form fields", async
       username: "person",
       password: "secret",
       loginUrl: cas.url + "/cas/login",
-      serviceUrl: wpUrl + "/?callback=1",
+      serviceUrl: wpUrl + "/wp-admin/?callback=1",
     },
   });
   await direct.login();

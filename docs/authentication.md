@@ -42,13 +42,15 @@ const client = new CodeSnippetsClient({
 });
 ```
 
-By default, the client opens WordPress `wp-login.php` and follows the redirect
+By default, the client opens the WordPress admin URL and follows the redirect
 configured by Cassify. It preserves hidden fields, including `execution` and `lt`
 when present, submits `username`, `password` and `_eventId=submit`, then follows the
 service ticket back to WordPress. **WordPress/Cassify validates the ticket**; this
 library is an HTTP form client, not a CAS server or service-ticket validator.
 
-- `entryUrl`: alternate entry point on the WordPress origin.
+- `entryUrl`: alternate entry point on the WordPress origin. Starting at the admin
+  URL keeps the CAS callback within the admin-cookie path; returning directly to
+  `wp-login.php` can cause a login loop with Cassify 2.4.9.
 - `serviceUrl`: when set, starts directly at `loginUrl?service=...`. Only use a
   callback accepted by your WordPress setup; some deployments need a PHP session
   initialized through WordPress first.

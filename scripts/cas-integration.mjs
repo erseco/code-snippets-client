@@ -21,6 +21,17 @@ let client;
 let id;
 try {
   process.stdout.write(run("start"));
+  assert.equal(wp("core", "version").trim(), "6.9.5");
+  assert.equal(
+    wp("plugin", "get", "code-snippets", "--field=version").trim(),
+    "3.9.6",
+  );
+  assert.equal(
+    wp("plugin", "get", "wp-cassify", "--field=version").trim(),
+    "2.4.9",
+  );
+  process.stdout.write(wp("eval", 'echo "PHP " . PHP_VERSION . "\\n";'));
+
   const settings = {
     wp_cassify_base_url: casUrl + "/",
     wp_cassify_login_servlet: "login",
@@ -78,22 +89,22 @@ try {
   );
   assert.equal((await client.activate(id)).active, true);
   assert.equal((await client.deactivate(id)).active, false);
+  assert.equal(await client.delete(id), null);
   console.log(
     "PASS: public CAS -> Cassify 2.4.9 -> WordPress session and REST nonce -> Code Snippets 3.9.6 CRUD; invalid password rejected.",
   );
 } finally {
+  // Remove only this test's records, including a snippet created before an API error.
   try {
-    if (client && id) {
-      const snippet = await client.get(id);
-      if (snippet.active) await client.deactivate(id);
-      if (!snippet.trashed) await client.delete(id);
-      await client.delete(id);
-    }
-  } finally {
-    try {
-      wp("user", "delete", username, "--yes");
-    } finally {
-      process.stdout.write(run("stop"));
-    }
+    wp(
+      "eval",
+      `global $wpdb; $wpdb->delete($wpdb->prefix . 'snippets', ['name' => '${username}']);`,
+    );
+    wp("user", "delete", username, "--yes");
+  } catch {
+    console.error(
+      "CAS fixture cleanup was incomplete; the environment is disposable.",
+    );
   }
+  process.stdout.write(run("stop"));
 }

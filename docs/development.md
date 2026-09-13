@@ -34,7 +34,8 @@ WordPress 6.9.5 / Code Snippets 3.9.6 baseline on both PHP versions. The baselin
 must not be advanced automatically when newer patches become available.
 
 The integration harness accepts `WP_ENV_CORE` and `WP_ENV_PHP_VERSION` through
-wp-env, and `TEST_CODE_SNIPPETS_VERSION` to install a specific plugin release.
+wp-env, and `TEST_CODE_SNIPPETS_VERSION` to select a specific plugin release before wp-env mounts it. It generates an
+ignored `.wp-env.integration.json` without changing the checked-in configuration.
 It prints the actual installed versions before exercising the API.
 
 ## Public CAS integration

@@ -9,3 +9,6 @@ artifacts/
 .wp-env.cas.override.json
 *.log
 .DS_Store
+
+.wp-env.integration.json
+.wp-env.integration.override.json

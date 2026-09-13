@@ -71,5 +71,5 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run test:integration
-      - run: npm run wp:stop
+      - run: npx wp-env --config=.wp-env.integration.json stop
         if: always()

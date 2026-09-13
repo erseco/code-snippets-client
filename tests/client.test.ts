@@ -16,6 +16,15 @@ async function setup(handler: Parameters<typeof server>[0]) {
 }
 
 describe("Code Snippets REST contract", () => {
+  it("accepts 3.9.6 responses without inventing a trash state", async () => {
+    const legacy: Record<string, unknown> = { ...sample };
+    delete legacy.trashed;
+    const c = await setup((req, res) => json(res, legacy));
+    expect(await c.get(7)).not.toHaveProperty("trashed");
+    legacy.trashed = "invalid";
+    await expect(c.get(7)).rejects.toMatchObject({ code: "RESPONSE" });
+  });
+
   it("lists, queries and preserves subsite query routing", async () => {
     const client = await setup((req, res) => {
       const u = new URL(req.url!, "http://test");
