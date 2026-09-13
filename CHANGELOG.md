@@ -4,6 +4,7 @@
 
 - Start CAS login from the admin URL to avoid Cassify 2.4.9 callback cookie loops.
 - Accept Code Snippets 3.9.6 responses without the optional trash-state field.
+- Keep latest test-version lanes current through Renovate PRs, preserving the fixed baseline.
 - Test WordPress/PHP/plugin compatibility and the fixed 6.9.5/3.9.6 baseline.
 - Add an opt-in real Cassify 2.4.9 check against the public pac4j CAS server.
 

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "enabledManagers": ["custom.regex"],
+  "branchPrefix": "feature/renovate/",
+  "schedule": ["before 6am on monday"],
+  "timezone": "Atlantic/Canary",
+  "automerge": false,
+  "customManagers": [
+    {
+      "customType": "regex",
+      "datasourceTemplate": "github-tags",
+      "versioningTemplate": "semver-coerced",
+      "extractVersionTemplate": "^v?(?<version>.*)$",
+      "managerFilePatterns": ["/^\\.github/workflows/ci\\.yml$/"],
+      "matchStrings": [
+        "\"(?<currentValue>[0-9.]+)\" # renovate: depName=(?<depName>[^\\s]+) depType=(?<depType>[^\\s]+)"
+      ]
+    },
+    {
+      "customType": "regex",
+      "datasourceTemplate": "github-tags",
+      "versioningTemplate": "semver-coerced",
+      "extractVersionTemplate": "^v?(?<version>.*)$",
+      "managerFilePatterns": ["/^\\.wp-env\\.json$/"],
+      "matchStrings": ["wordpress-(?<currentValue>[0-9.]+)\\.zip"],
+      "depNameTemplate": "WordPress/WordPress",
+      "depTypeTemplate": "wordpress71"
+    },
+    {
+      "customType": "regex",
+      "datasourceTemplate": "github-tags",
+      "versioningTemplate": "semver-coerced",
+      "extractVersionTemplate": "^v?(?<version>.*)$",
+      "managerFilePatterns": ["/^\\.wp-env\\.json$/"],
+      "matchStrings": ["code-snippets\\.(?<currentValue>[0-9.]+)\\.zip"],
+      "depNameTemplate": "codesnippetspro/code-snippets",
+      "depTypeTemplate": "snippetsLatest"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchDepTypes": ["wordpress69"],
+      "allowedVersions": "/^6\\.9(?:\\.|$)/"
+    },
+    {
+      "matchDepTypes": ["wordpress70"],
+      "allowedVersions": "/^7\\.0(?:\\.|$)/"
+    },
+    {
+      "matchDepTypes": ["wordpress71"],
+      "allowedVersions": "/^7\\.1(?:\\.|$)/"
+    }
+  ]
+}

@@ -50,9 +50,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        wordpress: ["6.9.7", "7.0.4", "7.1"]
+        wordpress:
+          - "6.9.7" # renovate: depName=WordPress/WordPress depType=wordpress69
+          - "7.0.4" # renovate: depName=WordPress/WordPress depType=wordpress70
+          - "7.1" # renovate: depName=WordPress/WordPress depType=wordpress71
         php: ["8.3", "8.4"]
-        snippets: ["3.9.6", "3.10.2"]
+        snippets:
+          - "3.9.6" # Fixed compatibility baseline.
+          - "3.10.2" # renovate: depName=codesnippetspro/code-snippets depType=snippetsLatest
         include:
           - { wordpress: "6.9.5", php: "8.3", snippets: "3.9.6" }
           - { wordpress: "6.9.5", php: "8.4", snippets: "3.9.6" }

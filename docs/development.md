@@ -29,7 +29,8 @@ this disposable environment.
 ## Compatibility tests
 
 Required CI runs 14 WordPress jobs: the latest pinned patches of WordPress 6.9,
-7.0 and 7.1 with PHP 8.3/8.4 and Code Snippets 3.9.6/3.10.2, plus the fixed
+7.0 and 7.1 with PHP 8.3/8.4 and Code Snippets 3.9.6 plus the latest pinned
+plugin release, as well as the fixed
 WordPress 6.9.5 / Code Snippets 3.9.6 baseline on both PHP versions. The baseline
 must not be advanced automatically when newer patches become available.
 
@@ -37,6 +38,14 @@ The integration harness accepts `WP_ENV_CORE` and `WP_ENV_PHP_VERSION` through
 wp-env, and `TEST_CODE_SNIPPETS_VERSION` to select a specific plugin release before wp-env mounts it. It generates an
 ignored `.wp-env.integration.json` without changing the checked-in configuration.
 It prints the actual installed versions before exercising the API.
+
+Renovate checks official upstream Git tags weekly and opens update PRs for the
+annotated matrix entries and `.wp-env.json`. WordPress updates stay within each
+6.9/7.0/7.1 branch; adding a new branch is an explicit support decision. Stable
+Code Snippets releases update the latest-version lane. The fixed baseline and
+`.wp-env.cas.json` are excluded. PHP 8.3/8.4 image tags resolve to current patches
+when wp-env prepares fresh CI containers. Dependabot continues managing npm and
+GitHub Actions; Renovate only manages these custom compatibility versions.
 
 ## Public CAS integration
 

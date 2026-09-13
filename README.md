@@ -78,7 +78,8 @@ npm run test:integration  # Docker required; starts and stops disposable WordPre
 ```
 
 CI runs on Linux, Windows and macOS. WordPress integration covers PHP 8.3/8.4,
-WordPress 6.9.7/7.0.4/7.1 and Code Snippets 3.9.6/3.10.2. A fixed compatibility
+the latest pinned patches of WordPress 6.9/7.0/7.1 and both Code Snippets 3.9.6
+and the latest pinned plugin release. A fixed compatibility
 baseline additionally tests WordPress 6.9.5 with Code Snippets 3.9.6.
 
 `npm run test:cas` tests Cassify 2.4.9 on that fixed baseline against the public
