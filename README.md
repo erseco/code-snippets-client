@@ -4,7 +4,7 @@
 [![codecov](https://codecov.io/gh/erseco/code-snippets-client/branch/main/graph/badge.svg)](https://codecov.io/gh/erseco/code-snippets-client)
 [![npm](https://img.shields.io/npm/v/@erseco/code-snippets-client)](https://www.npmjs.com/package/@erseco/code-snippets-client)
 [![Publish](https://github.com/erseco/code-snippets-client/actions/workflows/publish.yml/badge.svg)](https://github.com/erseco/code-snippets-client/actions/workflows/publish.yml)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![License: GPL v3 or later](https://img.shields.io/badge/License-GPLv3%2B-blue.svg)](LICENSE)
 
 A TypeScript client and CLI for the WordPress [Code Snippets](https://wordpress.org/plugins/code-snippets/)
 REST API. List, create, update, activate, deactivate and delete snippets from Node.js,
@@ -81,4 +81,11 @@ CI runs on Linux, Windows and macOS. WordPress integration runs on Linux, pinned
 to **WordPress 7.1, PHP 8.3 and Code Snippets 3.10.2**. CAS tests use a local HTTP
 form/ticket/callback simulator; they do not certify every Apereo deployment or MFA.
 
-Licensed under GPL-3.0-only. See [LICENSE](LICENSE).
+Copyright (C) 2026 Ernesto Serrano.
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later version.
+It is distributed without any warranty. See [LICENSE](LICENSE).
+
+SPDX-License-Identifier: GPL-3.0-or-later.

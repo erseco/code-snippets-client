@@ -1,7 +1,7 @@
 # Agent instructions
 
 A TypeScript library and Node.js CLI for the WordPress **Code Snippets** plugin.
-GPL-3.0-only. This is neither a WordPress plugin nor the WPCode product.
+GPL-3.0-or-later. This is neither a WordPress plugin nor the WPCode product.
 
 - Write all code, identifiers, comments, documentation, commits and user-facing text in English.
 - Use strict TypeScript and two spaces. `npm run format` applies formatting.
@@ -19,7 +19,9 @@ Before release: `npm ci`, `npm run check`, `npm run test:package` and
 `npm run test:integration` with Docker. Write tests use only the disposable
 WordPress in `.wp-env.json`, never user sites.
 
-Release tags are `v` plus the exact `package.json` version, after CI passes.
+After CI passes, publish a GitHub Release whose title and new tag are `v` plus
+the exact `package.json` version. The release creates the tag and triggers npm
+publication; pushing a tag alone does not publish.
 `publish.yml` uses npm Trusted Publishing (OIDC), environment `npm`, without committed
 tokens. Publish the same tarball installed by the package test. Never replace a
 published release. Record changes in CHANGELOG.md.

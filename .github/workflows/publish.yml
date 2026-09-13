@@ -1,7 +1,7 @@
 name: Publish
 on:
-  push:
-    tags: ["v*"]
+  release:
+    types: [published]
 permissions:
   contents: read
 jobs:
@@ -30,7 +30,7 @@ jobs:
       - run: npm run test:package
       - name: Publish the verified package using OIDC
         run: node scripts/publish.mjs
-      - name: Create release
+      - name: Attach the published package to the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" artifacts/*.tgz --generate-notes
+        run: gh release upload "$GITHUB_REF_NAME" artifacts/*.tgz

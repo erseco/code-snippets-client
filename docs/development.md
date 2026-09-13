@@ -34,9 +34,12 @@ once upstream resolves patched versions without overrides.
 
 1. Update the version and CHANGELOG. Run every check.
 2. Merge into `main` with passing CI.
-3. Create and push a tag named `v` followed by the exact package version.
-4. `publish.yml` repeats CI, installs and verifies the package, publishes that exact
-   tarball to npm and attaches it to a GitHub Release.
+3. Publish a GitHub Release from `main`. Both its title and its new tag must be
+   exactly `v` followed by the package version, for example `v0.1.1`. GitHub creates
+   the tag when you publish the release.
+4. The `release: published` event starts `publish.yml`, which repeats CI, installs
+   and verifies the package, publishes that exact tarball to npm and attaches it
+   to the existing release. Pushing a tag alone does not publish to npm.
 
 There is no per-commit publication or secondary registry: npm and GitHub Releases
 cover installation and artifact downloads. Never reuse a published version number.

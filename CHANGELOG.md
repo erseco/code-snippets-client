@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1] — 2026-09-13
+
+- License the project under GPL-3.0-or-later.
+- Publish to npm when a GitHub Release is published; attach the tested package.
+- Add tokenless Codecov uploads, a coverage badge and a file coverage treemap.
+- Require at least 90% project and patch coverage in Codecov.
+
 ## [0.1.0] — 2026-09-13
 
 - Typed REST client: list, get, create, update, activate, deactivate, trash,
