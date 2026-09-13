@@ -83,3 +83,12 @@ The CLI only loads an explicit `--env-file .env`. Use `WP_AUTH=cas` with
 `CAS_LOGIN_URL`, `WP_USERNAME` and `WP_PASSWORD`. Existing sessions use
 `WP_AUTH=session`, `WP_COOKIE` and `WP_NONCE`. Optional variables are documented in
 `.env.example` and `--help`. Never pass passwords as command-line arguments.
+
+## Tested Cassify baseline
+
+The opt-in `npm run test:cas` check exercises WordPress 6.9.5, Code Snippets 3.9.6
+and Cassify 2.4.9 against `https://www.casserverpac4j.dev`. Its endpoints are
+`/login`, `/p3/serviceValidate` and `/logout`; only the public test password
+`password` and a disposable username are used. These endpoint settings belong to
+Cassify on the local WordPress, not to the library's REST client. See the
+[development guide](development.md#public-cas-integration) for execution details.

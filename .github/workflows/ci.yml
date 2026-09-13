@@ -46,7 +46,20 @@ jobs:
           name: coverage
           path: coverage/
   wordpress:
-    name: WordPress integration
+    name: WP ${{ matrix.wordpress }} / PHP ${{ matrix.php }} / Snippets ${{ matrix.snippets }}
+    strategy:
+      fail-fast: false
+      matrix:
+        wordpress: ["6.9.7", "7.0.4", "7.1"]
+        php: ["8.3", "8.4"]
+        snippets: ["3.9.6", "3.10.2"]
+        include:
+          - { wordpress: "6.9.5", php: "8.3", snippets: "3.9.6" }
+          - { wordpress: "6.9.5", php: "8.4", snippets: "3.9.6" }
+    env:
+      WP_ENV_CORE: https://wordpress.org/wordpress-${{ matrix.wordpress }}.zip
+      WP_ENV_PHP_VERSION: ${{ matrix.php }}
+      TEST_CODE_SNIPPETS_VERSION: ${{ matrix.snippets }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

@@ -6,5 +6,6 @@ artifacts/
 .env.*
 !.env.example
 .wp-env.override.json
+.wp-env.cas.override.json
 *.log
 .DS_Store

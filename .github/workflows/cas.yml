@@ -1,0 +1,28 @@
+name: Public CAS integration
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  cas:
+    name: Cassify 2.4.9 / WP 6.9.5 / Snippets 3.9.6 / PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ["8.3", "8.4"]
+    env:
+      WP_ENV_PHP_VERSION: ${{ matrix.php }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run test:cas
+      - name: Stop the disposable CAS environment
+        if: always()
+        run: npx wp-env --config=.wp-env.cas.json stop

@@ -3,15 +3,15 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
+import { fileURLToPath } from "node:url";
 import { CodeSnippetsClient } from "../dist/index.js";
 const config = JSON.parse(
   readFileSync(new URL("../.wp-env.json", import.meta.url), "utf8"),
 );
 const baseUrl = `http://localhost:${config.port}`;
-const cli = new URL(
-  "../node_modules/@wordpress/env/bin/wp-env",
-  import.meta.url,
-).pathname;
+const cli = fileURLToPath(
+  new URL("../node_modules/@wordpress/env/bin/wp-env", import.meta.url),
+);
 const run = (...args) =>
   execFileSync(process.execPath, [cli, ...args], {
     encoding: "utf8",
@@ -23,6 +23,20 @@ const ids = [];
 let client;
 try {
   process.stdout.write(run("start"));
+  const version = process.env.TEST_CODE_SNIPPETS_VERSION;
+  if (version) {
+    assert.match(version, /^\d+\.\d+\.\d+$/);
+    wp(
+      "plugin",
+      "install",
+      `https://downloads.wordpress.org/plugin/code-snippets.${version}.zip`,
+      "--force",
+      "--activate",
+    );
+  }
+  process.stdout.write(wp("core", "version"));
+  process.stdout.write(wp("eval", "echo PHP_VERSION;"));
+  process.stdout.write(wp("plugin", "get", "code-snippets", "--field=version"));
   const options = {
     baseUrl,
     allowInsecureHttp: true,
@@ -116,7 +130,7 @@ try {
   assert.equal(await client.delete(created.id), null);
   ids.splice(ids.indexOf(created.id), 1);
   console.log(
-    "PASS: WordPress 7.1 / Code Snippets 3.10.2: CRUD, metadata, double declaration, application password, login, permissions, single-use, trash/restore/delete.",
+    "PASS: WordPress / Code Snippets integration: CRUD, metadata, double declaration, application password, login, permissions, single-use, trash/restore/delete.",
   );
 } finally {
   if (client)
