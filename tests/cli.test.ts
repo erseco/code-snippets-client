@@ -23,6 +23,10 @@ it("shows help without configuration", async () => {
   expect(await runCli(["--help"], {})).toContain("--env-file");
 });
 it("builds the supported authentication configurations", () => {
+  expect(
+    clientOptions({ ...env, WP_USER_AGENT: "Mozilla/5.0" }).userAgent,
+  ).toBe("Mozilla/5.0");
+  expect(clientOptions(env).userAgent).toBeUndefined();
   expect(clientOptions(env).auth.type).toBe("application-password");
   expect(clientOptions({ ...env, WP_AUTH: "wordpress" }).auth.type).toBe(
     "wordpress",

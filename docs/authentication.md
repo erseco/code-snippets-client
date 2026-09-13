@@ -5,6 +5,24 @@ Set `baseUrl` to the complete site or subsite URL, without query parameters.
 path differs; it must use the same origin as WordPress.
 HTTPS is required unless `allowInsecureHttp: true` explicitly enables local HTTP tests.
 
+## HTTP User-Agent
+
+Set the top-level `userAgent` client option, or `WP_USER_AGENT` in the CLI's
+explicit environment file, to send a custom HTTP User-Agent on all CAS/WordPress
+login requests, redirects, nonce retrieval and REST calls. For example:
+
+```ts
+const client = new CodeSnippetsClient({
+  baseUrl: "https://wordpress.example",
+  auth,
+  userAgent: "Mozilla/5.0",
+});
+```
+
+The value must be a non-empty printable ASCII string. Omit it to retain Node's
+default User-Agent. A browser-style header does not run JavaScript, unlock an
+account or complete MFA/CAPTCHA; it only changes the HTTP header.
+
 ## Application passwords
 
 ```ts

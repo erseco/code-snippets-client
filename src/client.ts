@@ -97,6 +97,16 @@ export class CodeSnippetsClient {
     const timeout = options.timeoutMs ?? 30000;
     if (!Number.isSafeInteger(timeout) || timeout <= 0 || timeout > 2147483647)
       throw new CodeSnippetsError("CONFIG", "Invalid timeout");
+    if (
+      options.userAgent !== undefined &&
+      (typeof options.userAgent !== "string" ||
+        !options.userAgent.trim() ||
+        /[^\x20-\x7e]/.test(options.userAgent))
+    )
+      throw new CodeSnippetsError(
+        "CONFIG",
+        "User-Agent must be a non-empty printable ASCII string",
+      );
     const auth = options.auth;
     if (
       !auth ||
@@ -117,7 +127,7 @@ export class CodeSnippetsClient {
     const origins = new Set([this.base.origin]);
     if (auth.type === "cas")
       origins.add(checkedUrl(auth.loginUrl, allowHttp).origin);
-    this.session = new Session(origins, timeout, allowHttp);
+    this.session = new Session(origins, timeout, allowHttp, options.userAgent);
   }
   /** Initialize authentication; API methods initialize it automatically. */
   async login(): Promise<void> {

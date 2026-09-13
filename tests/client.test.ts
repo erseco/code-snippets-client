@@ -303,3 +303,23 @@ it("rejects null snippet bodies and invalid metadata responses", async () => {
   const bad = await setup((req, res) => json(res, { ...sample, tags: [42] }));
   await expect(bad.get(7)).rejects.toMatchObject({ code: "RESPONSE" });
 });
+
+it("rejects invalid User-Agent values before any request", () => {
+  for (const userAgent of [
+    "",
+    "  ",
+    "bad\r\nInjected: value",
+    "bad\0",
+    "🧪",
+    42,
+  ]) {
+    expect(
+      () =>
+        new CodeSnippetsClient({
+          baseUrl: "https://example.test",
+          auth: { type: "application-password", username: "u", password: "p" },
+          userAgent: userAgent as string,
+        }),
+    ).toThrow(/User-Agent/);
+  }
+});
