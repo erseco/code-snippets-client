@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.5 — 2026-09-13
+
+- Add an optional `userAgent` client option and CLI `WP_USER_AGENT` configuration.
+- Send it consistently on CAS/WordPress login, redirects, nonce retrieval and REST.
+- Reject empty or unsafe header values before network access; preserve the runtime default when omitted.
+
 ## 0.1.4 — 2026-09-13
 
 - Omit the network query parameter for site/subsite operations. Legacy Code

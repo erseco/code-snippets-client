@@ -41,6 +41,8 @@ export interface ClientOptions {
   network?: boolean;
   adminUrl?: string;
   timeoutMs?: number;
+  /** Optional HTTP User-Agent sent on login, redirects and REST requests. */
+  userAgent?: string;
   /** Explicit HTTP opt-in for disposable local environments. */
   allowInsecureHttp?: boolean;
 }

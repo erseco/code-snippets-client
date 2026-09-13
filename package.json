@@ -1,6 +1,6 @@
 {
   "name": "@erseco/code-snippets-client",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "TypeScript client and CLI for the WordPress Code Snippets REST API, with WordPress and CAS authentication",
   "license": "GPL-3.0-or-later",
   "author": "Ernesto Serrano",

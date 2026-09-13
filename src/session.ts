@@ -29,6 +29,7 @@ export class Session {
     private readonly origins: Set<string>,
     private readonly timeoutMs: number,
     private readonly allowHttp: boolean,
+    private readonly userAgent?: string,
   ) {}
 
   async request(
@@ -40,6 +41,7 @@ export class Session {
     let method = init.method ?? "GET";
     let body = init.body;
     const headers = new Headers(init.headers);
+    if (this.userAgent !== undefined) headers.set("user-agent", this.userAgent);
     const signal = AbortSignal.timeout(this.timeoutMs);
     const explicitCookie = headers.get("cookie");
     for (let step = 0; step <= 10; step++) {

@@ -43,84 +43,94 @@ it("logs into WordPress, keeps cookies, and authenticates concurrent calls only 
   expect(posts).toBe(1);
 });
 
-it("follows the Cassify callback and preserves Apereo hidden form fields", async () => {
-  let wpUrl = "";
-  let service = "";
-  const cas = await server(async (req, res) => {
-    const url = new URL(req.url!, "http://cas");
-    if (req.method === "GET") {
-      service = url.searchParams.get("service")!;
-      res.setHeader("set-cookie", "cas=one; Path=/cas");
-      res.end(
-        `<form><input name='unrelated' type='hidden' value='ignore'></form><form action="/cas/login?service=${encodeURIComponent(service)}" method='post'><input value='token&amp;value' name='execution' type='hidden'><input name='lt' type='hidden' value='LT-1'><input name='disabled' type='hidden' disabled value='ignore'><input type='hidden' value='nameless'><input name='empty' type='hidden'><input name='visible' value='ignore'><div><input name='password' type='PASSWORD'></div></form>`,
-      );
-    } else {
-      const p = new URLSearchParams(await body(req));
-      expect(req.headers.cookie).toBe("cas=one");
-      expect(p.get("execution")).toBe("token&value");
-      expect(p.get("lt")).toBe("LT-1");
-      expect(p.get("empty")).toBe("");
-      for (const name of ["unrelated", "disabled", "visible"])
-        expect(p.has(name)).toBe(false);
-      expect(p.get("username")).toBe("person");
-      expect(p.get("_eventId")).toBe("submit");
-      res.writeHead(303, { location: service + "&ticket=ST-test" });
-      res.end();
-    }
-  });
-  stops.push(cas.close);
-  const wp = await server((req, res) => {
-    if (req.url === "/wp-admin/" && !req.headers.cookie?.includes("admin=ok")) {
-      res.writeHead(302, {
-        location:
-          cas.url +
-          "/cas/login?service=" +
-          encodeURIComponent(wpUrl + "/wp-admin/?callback=1"),
-      });
-      res.end();
-    } else if (req.url!.includes("ticket=ST-test")) {
-      expect(req.headers.cookie ?? "").not.toContain("cas=one");
-      res.writeHead(302, {
-        "set-cookie": ["wp=ok; Path=/", "admin=ok; Path=/wp-admin"],
-        location: "/wp-admin/",
-      });
-      res.end();
-    } else if (req.url!.includes("rest_route")) {
-      expect(req.headers.cookie).toContain("wp=ok");
-      json(res, [sample]);
-    } else {
-      expect(req.headers.cookie).toContain("admin=ok");
-      res.end(noncePage);
-    }
-  });
-  stops.push(wp.close);
-  wpUrl = wp.url;
-  const c = new CodeSnippetsClient({
-    baseUrl: wp.url,
-    allowInsecureHttp: true,
-    auth: {
-      type: "cas",
-      username: "person",
-      password: "secret",
-      loginUrl: cas.url + "/cas/login",
-    },
-  });
-  expect(await c.list()).toHaveLength(1);
-  expect(service).toBe(wpUrl + "/wp-admin/?callback=1");
-  // Also supports an explicit service without the initial WordPress redirect.
-  const direct = new CodeSnippetsClient({
-    baseUrl: wp.url,
-    allowInsecureHttp: true,
-    auth: {
-      type: "cas",
-      username: "person",
-      password: "secret",
-      loginUrl: cas.url + "/cas/login",
-      serviceUrl: wpUrl + "/wp-admin/?callback=1",
-    },
-  });
-  await direct.login();
-});
+it.each([undefined, "Mozilla/5.0 (local UA test)"])(
+  "preserves CAS cookies, fields and User-Agent %s across redirects",
+  async (userAgent) => {
+    let wpUrl = "";
+    let service = "";
+    const cas = await server(async (req, res) => {
+      if (userAgent) expect(req.headers["user-agent"]).toBe(userAgent);
+      const url = new URL(req.url!, "http://cas");
+      if (req.method === "GET") {
+        service = url.searchParams.get("service")!;
+        res.setHeader("set-cookie", "cas=one; Path=/cas");
+        res.end(
+          `<form><input name='unrelated' type='hidden' value='ignore'></form><form action="/cas/login?service=${encodeURIComponent(service)}" method='post'><input value='token&amp;value' name='execution' type='hidden'><input name='lt' type='hidden' value='LT-1'><input name='disabled' type='hidden' disabled value='ignore'><input type='hidden' value='nameless'><input name='empty' type='hidden'><input name='visible' value='ignore'><div><input name='password' type='PASSWORD'></div></form>`,
+        );
+      } else {
+        const p = new URLSearchParams(await body(req));
+        expect(req.headers.cookie).toBe("cas=one");
+        expect(p.get("execution")).toBe("token&value");
+        expect(p.get("lt")).toBe("LT-1");
+        expect(p.get("empty")).toBe("");
+        for (const name of ["unrelated", "disabled", "visible"])
+          expect(p.has(name)).toBe(false);
+        expect(p.get("username")).toBe("person");
+        expect(p.get("_eventId")).toBe("submit");
+        res.writeHead(303, { location: service + "&ticket=ST-test" });
+        res.end();
+      }
+    });
+    stops.push(cas.close);
+    const wp = await server((req, res) => {
+      if (userAgent) expect(req.headers["user-agent"]).toBe(userAgent);
+      if (
+        req.url === "/wp-admin/" &&
+        !req.headers.cookie?.includes("admin=ok")
+      ) {
+        res.writeHead(302, {
+          location:
+            cas.url +
+            "/cas/login?service=" +
+            encodeURIComponent(wpUrl + "/wp-admin/?callback=1"),
+        });
+        res.end();
+      } else if (req.url!.includes("ticket=ST-test")) {
+        expect(req.headers.cookie ?? "").not.toContain("cas=one");
+        res.writeHead(302, {
+          "set-cookie": ["wp=ok; Path=/", "admin=ok; Path=/wp-admin"],
+          location: "/wp-admin/",
+        });
+        res.end();
+      } else if (req.url!.includes("rest_route")) {
+        expect(req.headers.cookie).toContain("wp=ok");
+        json(res, [sample]);
+      } else {
+        expect(req.headers.cookie).toContain("admin=ok");
+        res.end(noncePage);
+      }
+    });
+    stops.push(wp.close);
+    wpUrl = wp.url;
+    const c = new CodeSnippetsClient({
+      baseUrl: wp.url,
+      ...(userAgent === undefined ? {} : { userAgent }),
+      allowInsecureHttp: true,
+      auth: {
+        type: "cas",
+        username: "person",
+        password: "secret",
+        loginUrl: cas.url + "/cas/login",
+      },
+    });
+    expect(await c.list()).toHaveLength(1);
+    expect(service).toBe(wpUrl + "/wp-admin/?callback=1");
+    // Also supports an explicit service without the initial WordPress redirect.
+    const direct = new CodeSnippetsClient({
+      baseUrl: wp.url,
+      ...(userAgent === undefined ? {} : { userAgent }),
+      allowInsecureHttp: true,
+      auth: {
+        type: "cas",
+        username: "person",
+        password: "secret",
+        loginUrl: cas.url + "/cas/login",
+        serviceUrl: wpUrl + "/wp-admin/?callback=1",
+      },
+    });
+    await direct.login();
+  },
+);
 
 it("fails safely for rejected credentials, missing nonce and MFA forms", async () => {
   let mode = 0;

@@ -23,7 +23,7 @@ Options:
   --help            Show this help
 
 Configuration: WP_URL, WP_AUTH=application-password|wordpress|cas|session,
-WP_USERNAME, WP_PASSWORD, WP_NETWORK=true|false, WP_ADMIN_URL,
+WP_USERNAME, WP_PASSWORD, WP_NETWORK=true|false, WP_ADMIN_URL, WP_USER_AGENT,
 CAS_LOGIN_URL, CAS_SERVICE_URL, CAS_ENTRY_URL, WP_COOKIE, WP_NONCE.
 WP_ALLOW_HTTP=true is for disposable local tests only.
 `;
@@ -63,6 +63,9 @@ export function clientOptions(
     auth,
     network: boolean(env, "WP_NETWORK"),
     allowInsecureHttp: boolean(env, "WP_ALLOW_HTTP"),
+    ...(env.WP_USER_AGENT !== undefined
+      ? { userAgent: env.WP_USER_AGENT }
+      : {}),
     ...(env.WP_ADMIN_URL ? { adminUrl: env.WP_ADMIN_URL } : {}),
   };
 }
