@@ -16,6 +16,34 @@ async function setup(handler: Parameters<typeof server>[0]) {
 }
 
 describe("Code Snippets REST contract", () => {
+  it("omits false network query strings that legacy multisite treats as true", async () => {
+    const s = await server(async (req, res) => {
+      const url = new URL(req.url!, "http://fixture");
+      expect(url.searchParams.has("network")).toBe(false);
+      const route = url.searchParams.get("rest_route")!;
+      if (req.method === "GET") {
+        json(res, route.endsWith("/snippets") ? [sample] : sample);
+      } else {
+        const payload = JSON.parse(await body(req));
+        expect(payload.network).toBe(false);
+        json(res, { ...sample, ...payload });
+      }
+    });
+    stops.push(s.close);
+    for (const network of [undefined, false]) {
+      const client = new CodeSnippetsClient({
+        baseUrl: s.url + "/subsite",
+        auth: { type: "application-password", username: "u", password: "p" },
+        allowInsecureHttp: true,
+        ...(network === undefined ? {} : { network }),
+      });
+      await client.list();
+      await client.get(7);
+      await client.create({ name: "New", code: "// new" });
+      await client.update(7, { code: "// update" });
+    }
+  });
+
   it("accepts 3.9.6 responses without inventing a trash state", async () => {
     const legacy: Record<string, unknown> = { ...sample };
     delete legacy.trashed;

@@ -147,7 +147,9 @@ export class CodeSnippetsClient {
       "rest_route",
       `/code-snippets/v1/snippets${path ? "/" + path : ""}`,
     );
-    url.searchParams.set("network", String(this.options.network ?? false));
+    // Legacy controllers do not sanitize this query: PHP treats "false" as true.
+    // Missing selects site snippets; keep explicit booleans in JSON write bodies.
+    if (this.options.network) url.searchParams.set("network", "true");
     for (const [key, value] of Object.entries(query))
       url.searchParams.set(key, value);
     const headers = new Headers(await this.headers());
