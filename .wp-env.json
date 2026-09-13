@@ -1,0 +1,10 @@
+{
+  "core": "https://wordpress.org/wordpress-7.1.zip",
+  "phpVersion": "8.3",
+  "plugins": [
+    "https://downloads.wordpress.org/plugin/code-snippets.3.10.2.zip"
+  ],
+  "port": 8896,
+  "testsPort": 8897,
+  "config": { "WP_ENVIRONMENT_TYPE": "local" }
+}

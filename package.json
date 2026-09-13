@@ -1,0 +1,79 @@
+{
+  "name": "@erseco/code-snippets-client",
+  "version": "0.1.0",
+  "description": "TypeScript client and CLI for the WordPress Code Snippets REST API, with WordPress and CAS authentication",
+  "license": "GPL-3.0-only",
+  "author": "Ernesto Serrano",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/erseco/code-snippets-client.git"
+  },
+  "homepage": "https://github.com/erseco/code-snippets-client#readme",
+  "bugs": {
+    "url": "https://github.com/erseco/code-snippets-client/issues"
+  },
+  "keywords": [
+    "wordpress",
+    "code-snippets",
+    "rest-api",
+    "cas",
+    "cli",
+    "typescript"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "wp-code-snippets": "./dist/bin.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "docs"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=22.14"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run --coverage",
+    "test:integration": "node scripts/integration.mjs",
+    "check": "npm run format:check && npm run typecheck && npm test && npm run build",
+    "prepack": "npm run build",
+    "test:package": "node scripts/test-package.mjs",
+    "wp:start": "wp-env start",
+    "wp:stop": "wp-env stop",
+    "wp:destroy": "wp-env destroy"
+  },
+  "dependencies": {
+    "cheerio": "1.2.0",
+    "tough-cookie": "6.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.2",
+    "@vitest/coverage-v8": "5.0.0",
+    "@wordpress/env": "11.15.0",
+    "prettier": "3.9.6",
+    "typescript": "7.0.2",
+    "vitest": "5.0.0"
+  },
+  "overrides": {
+    "qs": "^6.16.0",
+    "ws": "^8.21.3",
+    "ajv": "^8.20.0"
+  }
+}
