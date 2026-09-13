@@ -39,6 +39,8 @@ const ids = [];
 let client;
 try {
   process.stdout.write(run("start"));
+  // Reused volumes may have been tested with a different WordPress version.
+  process.stdout.write(wp("core", "update-db"));
   process.stdout.write(wp("core", "version"));
   process.stdout.write(wp("eval", "echo PHP_VERSION;"));
   process.stdout.write(wp("plugin", "get", "code-snippets", "--field=version"));

@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 // npm_execpath also works on Windows without invoking a .cmd through a shell.
 const npm = (args, cwd = process.cwd()) =>
-  execFileSync(process.execPath, [process.env.npm_execpath, ...args], {
+  execFileSync(process.execPath, ["--", process.env.npm_execpath, ...args], {
     cwd,
     encoding: "utf8",
   });
@@ -37,6 +37,17 @@ try {
     ],
     temporary,
   );
+  const installedLock = JSON.parse(
+    readFileSync(join(temporary, "package-lock.json")),
+  );
+  const deprecated = Object.entries(installedLock.packages)
+    .filter(([, metadata]) => metadata.deprecated)
+    .map(([name]) => name);
+  assert.deepEqual(
+    deprecated,
+    [],
+    "Published dependencies must not be deprecated",
+  );
   const check =
     "import {CodeSnippetsClient} from '@erseco/code-snippets-client'; if(typeof CodeSnippetsClient !== 'function') process.exit(1)";
   execFileSync(process.execPath, ["--input-type=module", "-e", check], {
@@ -54,6 +65,13 @@ try {
     { encoding: "utf8" },
   );
   assert.match(help, /Commands:/);
+  // Exercise npm's real launcher (including Windows shims). Node must not consume
+  // the CLI's --env-file before --help can return without opening that file.
+  const launcherHelp = npm(
+    ["exec", "--", "wp-code-snippets", "--env-file", "missing.env", "--help"],
+    temporary,
+  );
+  assert.match(launcherHelp, /Commands:/);
   assert.equal(
     JSON.parse(readFileSync(join(installed, "package.json"))).version,
     pack.version,

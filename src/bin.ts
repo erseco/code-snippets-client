@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S node --
 import { runCli } from "./cli.js";
 import { CodeSnippetsError } from "./errors.js";
 try {
