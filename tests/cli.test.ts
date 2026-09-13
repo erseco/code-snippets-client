@@ -2,6 +2,7 @@ import { afterEach, expect, it } from "vitest";
 import { mkdtemp, writeFile, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { CodeSnippetsClient } from "../src/client.js";
 import { runCli, clientOptions, normalizePhp } from "../src/cli.js";
 import { server, json, body, sample } from "./helpers.js";
 const clean: (() => Promise<unknown>)[] = [];
@@ -167,4 +168,26 @@ it("validates dry-run payloads just like real writes", async () => {
   await expect(
     runCli(["update", "7", "--priority", "bad", "--dry-run"], env),
   ).rejects.toThrow("Invalid snippet");
+});
+
+it("maps the CLI timeout and rejects invalid values before networking", () => {
+  expect(clientOptions(env).timeoutMs).toBeUndefined();
+  expect(clientOptions({ ...env, WP_TIMEOUT_MS: "120000" }).timeoutMs).toBe(
+    120000,
+  );
+  for (const value of [
+    "",
+    " ",
+    "invalid",
+    "0",
+    "-1",
+    "1.5",
+    "Infinity",
+    "2147483648",
+  ]) {
+    expect(
+      () =>
+        new CodeSnippetsClient(clientOptions({ ...env, WP_TIMEOUT_MS: value })),
+    ).toThrow("Invalid timeout");
+  }
 });

@@ -97,7 +97,12 @@ domain and path rules: different ports do not isolate cookies.
 REST requests do not follow redirects to login forms. An expired session fails;
 create a new client to authenticate again. Writes with uncertain outcomes are not
 retried automatically. `timeoutMs` defaults to 30,000. Redirects share their request's
-timeout and are limited to ten hops.
+timeout and are limited to ten hops. This budget includes response body reading
+and applies separately to each request during login, nonce retrieval and REST.
+Set `WP_TIMEOUT_MS=120000` in the CLI environment file to allow two minutes,
+or pass `timeoutMs: 120000` to the library. Valid values are integer milliseconds
+from 1 to 2147483647; omit the setting to retain the 30000 ms default.
+This does not retry failed logins or writes.
 
 The CLI only loads an explicit `--env-file .env`. Use `WP_AUTH=cas` with
 `CAS_LOGIN_URL`, `WP_USERNAME` and `WP_PASSWORD`. Existing sessions use
