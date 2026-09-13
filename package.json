@@ -1,6 +1,6 @@
 {
   "name": "@erseco/code-snippets-client",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "TypeScript client and CLI for the WordPress Code Snippets REST API, with WordPress and CAS authentication",
   "license": "GPL-3.0-or-later",
   "author": "Ernesto Serrano",
@@ -57,7 +57,8 @@
     "test:package": "node scripts/test-package.mjs",
     "wp:start": "wp-env start",
     "wp:stop": "wp-env stop",
-    "wp:destroy": "wp-env destroy"
+    "wp:destroy": "wp-env destroy",
+    "test:cas": "node scripts/cas-integration.mjs"
   },
   "dependencies": {
     "cheerio": "1.2.0",

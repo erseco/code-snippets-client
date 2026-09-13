@@ -19,7 +19,8 @@ export interface Snippet extends SnippetInput {
   tags: string[];
   active: boolean;
   network: boolean;
-  trashed: boolean;
+  /** Absent in older plugin APIs, including 3.9.6; absence does not mean false. */
+  trashed?: boolean;
   code_error?: unknown;
 }
 export type Authentication =

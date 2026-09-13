@@ -84,10 +84,7 @@ export async function authenticate(
     );
   } else {
     const cas = checkedUrl(auth.loginUrl, allowHttp);
-    let entry = checkedUrl(
-      auth.entryUrl ?? new URL("wp-login.php", base).href,
-      allowHttp,
-    );
+    let entry = checkedUrl(auth.entryUrl ?? admin.href, allowHttp);
     if (entry.origin !== base.origin)
       throw new CodeSnippetsError(
         "CONFIG",

@@ -77,9 +77,15 @@ npm run test:package
 npm run test:integration  # Docker required; starts and stops disposable WordPress
 ```
 
-CI runs on Linux, Windows and macOS. WordPress integration runs on Linux, pinned
-to **WordPress 7.1, PHP 8.3 and Code Snippets 3.10.2**. CAS tests use a local HTTP
-form/ticket/callback simulator; they do not certify every Apereo deployment or MFA.
+CI runs on Linux, Windows and macOS. WordPress integration covers PHP 8.3/8.4,
+the latest pinned patches of WordPress 6.9/7.0/7.1 and both Code Snippets 3.9.6
+and the latest pinned plugin release. A fixed compatibility
+baseline additionally tests WordPress 6.9.5 with Code Snippets 3.9.6.
+
+`npm run test:cas` tests Cassify 2.4.9 on that fixed baseline against the public
+[pac4j CAS test server](https://www.casserverpac4j.dev), using a disposable account.
+This opt-in external check is independent of required CI. Local CAS simulations
+remain part of the unit tests. Neither check certifies every CAS deployment or MFA.
 
 Copyright (C) 2026 Ernesto Serrano.
 

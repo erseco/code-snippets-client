@@ -1,0 +1,11 @@
+{
+  "core": "https://wordpress.org/wordpress-6.9.5.zip",
+  "phpVersion": "8.3",
+  "plugins": [
+    "https://downloads.wordpress.org/plugin/code-snippets.3.9.6.zip",
+    "https://downloads.wordpress.org/plugin/wp-cassify.2.4.9.zip"
+  ],
+  "port": 8910,
+  "testsEnvironment": false,
+  "config": { "WP_ENVIRONMENT_TYPE": "local" }
+}

@@ -17,7 +17,8 @@ business rules belong in this client.
 
 ## Verified contract
 
-The reference is Code Snippets 3.10.2 installed from WordPress.org, specifically
+The references are Code Snippets 3.9.6 and 3.10.2 installed from WordPress.org.
+The 3.9.6 controller is `php/rest-api/class-snippets-rest-controller.php`; 3.10.2 uses
 `php/REST_API/Snippets/Snippets_REST_Controller.php`. The development tree may change
 before release: [upstream controller](https://github.com/codesnippetspro/code-snippets/blob/core-beta/src/php/REST_API/Snippets/Snippets_REST_Controller.php).
 
@@ -25,17 +26,21 @@ before release: [upstream controller](https://github.com/codesnippetspro/code-sn
 - Mutations use POST, accepted by `WP_REST_Server::EDITABLE`.
 - In 3.10.2, activation/deactivation serialize the model as `{}`. A subsequent GET
   normalizes the result and verifies persisted state.
-- Restoration returns HTTP 204; the client also fetches the snippet afterward.
-- The first deletion trashes the snippet; the next permanently deletes it.
+- In 3.10.2, restoration returns HTTP 204; the client fetches the snippet afterward.
+  The first deletion trashes the snippet; the next permanently deletes it.
+- In 3.9.6, `trashed` is absent, DELETE only trashes and returns HTTP 204, and the
+  REST restore route does not exist. The client preserves that distinction.
 - HTTP 200 alone is not sufficient evidence of successful activation.
 
 ## Test boundaries
 
-Local integration covers WordPress 7.1 / PHP 8.3 / Code Snippets 3.10.2, WordPress
-login, application passwords, permissions and PHP snippet operations. Subsite routing
-and network parameters are tested with HTTP simulations. Initial integration does
+The required WordPress/PHP/plugin matrix is documented in the [development guide](development.md).
+It covers native login, application passwords, permissions and PHP snippet operations.
+Subsite routing and network parameters are tested with HTTP simulations; this does
 not demonstrate a real multisite network or Pro features.
 
-CAS tests simulate forms and callbacks based on Cassify's flow. They have not run
-against a production Apereo/Cassify deployment, MFA or every possible CAS theme.
-Extend the relevant tests before claiming additional compatibility.
+CAS unit tests simulate forms and callbacks. The opt-in external integration uses
+Cassify 2.4.9, WordPress 6.9.5 and Code Snippets 3.9.6 against the public pac4j CAS
+server. It covers ticket validation, admin cookies, REST nonce retrieval and API
+operations, including the need to start from the admin URL. Production CAS policies,
+MFA, logout/SLO and arbitrary CAS themes remain outside that check.

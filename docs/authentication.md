@@ -42,13 +42,15 @@ const client = new CodeSnippetsClient({
 });
 ```
 
-By default, the client opens WordPress `wp-login.php` and follows the redirect
+By default, the client opens the WordPress admin URL and follows the redirect
 configured by Cassify. It preserves hidden fields, including `execution` and `lt`
 when present, submits `username`, `password` and `_eventId=submit`, then follows the
 service ticket back to WordPress. **WordPress/Cassify validates the ticket**; this
 library is an HTTP form client, not a CAS server or service-ticket validator.
 
-- `entryUrl`: alternate entry point on the WordPress origin.
+- `entryUrl`: alternate entry point on the WordPress origin. Starting at the admin
+  URL keeps the CAS callback within the admin-cookie path; returning directly to
+  `wp-login.php` can cause a login loop with Cassify 2.4.9.
 - `serviceUrl`: when set, starts directly at `loginUrl?service=...`. Only use a
   callback accepted by your WordPress setup; some deployments need a PHP session
   initialized through WordPress first.
@@ -83,3 +85,12 @@ The CLI only loads an explicit `--env-file .env`. Use `WP_AUTH=cas` with
 `CAS_LOGIN_URL`, `WP_USERNAME` and `WP_PASSWORD`. Existing sessions use
 `WP_AUTH=session`, `WP_COOKIE` and `WP_NONCE`. Optional variables are documented in
 `.env.example` and `--help`. Never pass passwords as command-line arguments.
+
+## Tested Cassify baseline
+
+The opt-in `npm run test:cas` check exercises WordPress 6.9.5, Code Snippets 3.9.6
+and Cassify 2.4.9 against `https://www.casserverpac4j.dev`. Its endpoints are
+`/login`, `/p3/serviceValidate` and `/logout`; only the public test password
+`password` and a disposable username are used. These endpoint settings belong to
+Cassify on the local WordPress, not to the library's REST client. See the
+[development guide](development.md#public-cas-integration) for execution details.

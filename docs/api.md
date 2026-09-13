@@ -6,15 +6,15 @@ All methods are asynchronous. `login()` initializes authentication headers or a
 session. Application password validity is checked on the first REST request.
 API methods initialize authentication automatically and share an in-progress login.
 
-| Method                                        | Result                                              |
-| --------------------------------------------- | --------------------------------------------------- |
-| `list({ page?, perPage?, search?, status? })` | `Snippet[]`                                         |
-| `get(id)`                                     | `Snippet`                                           |
-| `create({ name, code, ... })`                 | `Snippet`, inactive unless `active: true`           |
-| `update(id, changes)`                         | `Snippet`                                           |
-| `activate(id)` / `deactivate(id)`             | `Snippet` fetched after the operation               |
-| `delete(id)`                                  | Trashed snippet, or `null` after permanent deletion |
-| `restore(id)`                                 | `Snippet` fetched after restoration                 |
+| Method                                        | Result                                                |
+| --------------------------------------------- | ----------------------------------------------------- |
+| `list({ page?, perPage?, search?, status? })` | `Snippet[]`                                           |
+| `get(id)`                                     | `Snippet`                                             |
+| `create({ name, code, ... })`                 | `Snippet`, inactive unless `active: true`             |
+| `update(id, changes)`                         | `Snippet`                                             |
+| `activate(id)` / `deactivate(id)`             | `Snippet` fetched after the operation                 |
+| `delete(id)`                                  | Snippet or `null` (HTTP 204; see version differences) |
+| `restore(id)`                                 | `Snippet` fetched after restoration                   |
 
 IDs are positive integers local to each destination. Writable fields: `name`,
 `code`, `desc`, `scope`, `priority`, `tags`, `active`, `shared_network`, `condition_id`
@@ -33,8 +33,9 @@ to restore activation once and verifies the result. When changing from/to
 retried. An explicit single-use activation may return `active: false` because the
 verification read already consumed the execution; verify its application-specific effect.
 
-`delete` follows plugin semantics: trash first, then permanently delete if already
-trashed. It never retries automatically.
+`delete` follows the installed plugin API. In 3.10.2 it trashes first, then
+permanently deletes an already trashed snippet. In 3.9.6 it only trashes. It never
+retries automatically. See [older plugin APIs](#older-plugin-apis).
 
 `CodeSnippetsError` provides `code`, `message` and an optional HTTP `status`.
 Codes: `CONFIG`, `VALIDATION`, `AUTH`, `HTTP`, `NETWORK`, `RESPONSE`, `STATE`.
@@ -73,3 +74,13 @@ parse stdout JSON and check the exit status. Pass configuration through the
 environment and changes through stdin (`--input -`); never interpolate passwords
 or PHP into a shell command. Each invocation keeps one session; separate invocations
 authenticate again.
+
+## Older plugin APIs
+
+Code Snippets 3.9.6 omits `trashed`, so the client leaves that property undefined.
+Do not interpret its absence as `false`. Its DELETE endpoint moves the snippet to
+trash and returns HTTP 204 (`null` in this client); that response does not prove
+permanent deletion. Version 3.9.6 has no REST restore endpoint, so `restore()`
+returns the server's 404 error. Restore and permanent deletion remain available
+through the plugin's own admin interface. Code Snippets 3.10.2 exposes `trashed`,
+REST restoration and permanent deletion of already trashed snippets.

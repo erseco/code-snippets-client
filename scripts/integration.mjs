@@ -1,28 +1,47 @@
 // Disposable WordPress only: never accepts production targets or credentials.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
+import { fileURLToPath } from "node:url";
 import { CodeSnippetsClient } from "../dist/index.js";
 const config = JSON.parse(
   readFileSync(new URL("../.wp-env.json", import.meta.url), "utf8"),
 );
+const version = process.env.TEST_CODE_SNIPPETS_VERSION;
+if (version) {
+  assert.match(version, /^\d+\.\d+\.\d+$/);
+  config.plugins = [
+    `https://downloads.wordpress.org/plugin/code-snippets.${version}.zip`,
+  ];
+}
+// wp-env mounts plugins as directories; select the version before creating containers.
+writeFileSync(
+  ".wp-env.integration.json",
+  JSON.stringify(config, null, 2) + "\n",
+);
 const baseUrl = `http://localhost:${config.port}`;
-const cli = new URL(
-  "../node_modules/@wordpress/env/bin/wp-env",
-  import.meta.url,
-).pathname;
+const cli = fileURLToPath(
+  new URL("../node_modules/@wordpress/env/bin/wp-env", import.meta.url),
+);
 const run = (...args) =>
-  execFileSync(process.execPath, [cli, ...args], {
-    encoding: "utf8",
-    timeout: 300000,
-  });
+  execFileSync(
+    process.execPath,
+    [cli, "--config=.wp-env.integration.json", ...args],
+    {
+      encoding: "utf8",
+      timeout: 300000,
+    },
+  );
 const wp = (...args) => run("run", "cli", "wp", ...args);
 const key = "client_test_" + randomUUID().replaceAll("-", "");
 const ids = [];
 let client;
 try {
   process.stdout.write(run("start"));
+  process.stdout.write(wp("core", "version"));
+  process.stdout.write(wp("eval", "echo PHP_VERSION;"));
+  process.stdout.write(wp("plugin", "get", "code-snippets", "--field=version"));
   const options = {
     baseUrl,
     allowInsecureHttp: true,
@@ -62,8 +81,6 @@ try {
     true,
   );
   assert.equal((await client.deactivate(created.id)).active, false);
-  assert.equal((await client.delete(created.id)).trashed, true);
-  assert.equal((await client.restore(created.id)).trashed, false);
   // Application password generated exclusively inside the local container.
   const output = wp(
     "user",
@@ -112,24 +129,32 @@ try {
   await fetch(baseUrl);
   const count = wp("--skip-plugins", "option", "get", key);
   assert.match(count, /(?:^|\n)1\s*(?:\n|$)/);
-  assert.equal((await client.delete(created.id)) instanceof Object, true);
-  assert.equal(await client.delete(created.id), null);
-  ids.splice(ids.indexOf(created.id), 1);
+  if (created.trashed === undefined) {
+    assert.equal(await client.delete(created.id), null);
+    await assert.rejects(() => client.restore(created.id), { status: 404 });
+    const trashed = wp(
+      "eval",
+      `echo (int) Code_Snippets\\get_snippet(${created.id})->is_trashed();`,
+    );
+    assert.match(trashed, /(?:^|\n)1\s*(?:\n|$)/);
+  } else {
+    assert.equal((await client.delete(created.id)).trashed, true);
+    assert.equal((await client.restore(created.id)).trashed, false);
+    assert.equal((await client.delete(created.id)).trashed, true);
+    assert.equal(await client.delete(created.id), null);
+    ids.splice(ids.indexOf(created.id), 1);
+  }
   console.log(
-    "PASS: WordPress 7.1 / Code Snippets 3.10.2: CRUD, metadata, double declaration, application password, login, permissions, single-use, trash/restore/delete.",
+    "PASS: WordPress / Code Snippets integration: CRUD, metadata, double declaration, application password, login, permissions, single-use and supported trash/restore/delete operations.",
   );
 } finally {
-  if (client)
-    for (const id of ids) {
-      try {
-        const s = await client.get(id);
-        if (s.active) await client.deactivate(id);
-        if (!s.trashed) await client.delete(id);
-        await client.delete(id);
-      } catch {
-        /* Stop the environment even if cleanup fails. */
-      }
+  for (const id of ids) {
+    try {
+      wp("eval", `Code_Snippets\\delete_snippet(${id});`);
+    } catch {
+      console.error(`Could not clean up disposable snippet ${id}`);
     }
+  }
   try {
     wp("--skip-plugins", "option", "delete", key);
     wp("user", "application-password", "delete", "admin", "--all");
