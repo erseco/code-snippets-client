@@ -18,6 +18,9 @@ jobs:
           - { os: ubuntu-latest, node: 26 }
           - { os: windows-latest, node: 24 }
           - { os: macos-latest, node: 24 }
+    permissions:
+      contents: read
+      id-token: write
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     steps:
@@ -29,6 +32,14 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm run test:package
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.node == 24
+        uses: codecov/codecov-action@v7
+        with:
+          use_oidc: true
+          files: ./coverage/lcov.info
+          disable_search: true
+          fail_ci_if_error: true
       - uses: actions/upload-artifact@v7
         if: matrix.os == 'ubuntu-latest' && matrix.node == 24
         with:

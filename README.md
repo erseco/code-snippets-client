@@ -1,6 +1,7 @@
 # Code Snippets Client
 
 [![CI](https://github.com/erseco/code-snippets-client/actions/workflows/ci.yml/badge.svg)](https://github.com/erseco/code-snippets-client/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/erseco/code-snippets-client/branch/main/graph/badge.svg)](https://codecov.io/gh/erseco/code-snippets-client)
 [![npm](https://img.shields.io/npm/v/@erseco/code-snippets-client)](https://www.npmjs.com/package/@erseco/code-snippets-client)
 [![Publish](https://github.com/erseco/code-snippets-client/actions/workflows/publish.yml/badge.svg)](https://github.com/erseco/code-snippets-client/actions/workflows/publish.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
@@ -9,6 +10,8 @@ A TypeScript client and CLI for the WordPress [Code Snippets](https://wordpress.
 REST API. List, create, update, activate, deactivate and delete snippets from Node.js,
 using application passwords, WordPress login, existing sessions or CAS forms.
 An independent, unofficial project. Not the WPCode plugin.
+
+[![Coverage treemap](https://codecov.io/gh/erseco/code-snippets-client/graphs/tree.svg?token=IbJ7WynHMP)](https://codecov.io/gh/erseco/code-snippets-client)
 
 ## Install
 
