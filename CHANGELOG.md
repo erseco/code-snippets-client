@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.6 — 2026-09-13
+
+- Expose the existing request timeout through CLI `WP_TIMEOUT_MS`.
+- Document timeout and User-Agent configuration for slow CAS/WordPress servers.
+- Validate timeout values before networking; preserve the 30000 ms default.
+
 ## 0.1.5 — 2026-09-13
 
 - Add an optional `userAgent` client option and CLI `WP_USER_AGENT` configuration.

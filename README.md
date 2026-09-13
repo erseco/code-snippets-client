@@ -95,7 +95,3 @@ Foundation, either version 3 of the License, or (at your option) any later versi
 It is distributed without any warranty. See [LICENSE](LICENSE).
 
 SPDX-License-Identifier: GPL-3.0-or-later.
-
-Set `userAgent` in the client options, or `WP_USER_AGENT` for the CLI, when your
-installation needs a custom User-Agent for login and REST. See
-[authentication configuration](docs/authentication.md#http-user-agent).
