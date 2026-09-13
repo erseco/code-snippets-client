@@ -65,6 +65,13 @@ not verify permissions, PHP syntax or remote conflicts. `diff` returns both code
 versions and whether they match. Output is JSON except for `pull` and help.
 Errors go to stderr and produce a nonzero exit code.
 
+Set `WP_USER_AGENT` in the CLI environment file (or `userAgent` in client
+options) when your installation needs a custom HTTP User-Agent for login and REST.
+Set `WP_TIMEOUT_MS=120000` (or `timeoutMs: 120000`) to allow two minutes per
+request on slow servers. The default is 30000 ms, including redirects and response
+reading. Values must be integers from 1 to 2147483647. No retries are added.
+See [authentication configuration](docs/authentication.md).
+
 [API and CLI reference](docs/api.md) · [Authentication and CAS](docs/authentication.md) ·
 [Architecture and limits](docs/architecture.md) · [Development and releases](docs/development.md)
 
