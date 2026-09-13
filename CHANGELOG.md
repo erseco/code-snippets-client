@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.4 — 2026-09-13
+
+- Omit the network query parameter for site/subsite operations. Legacy Code
+  Snippets controllers treat the string `false` as true and can read the network
+  table instead of the selected subsite. Network requests still send `network=true`;
+  JSON write bodies retain explicit booleans.
+- Add regression coverage for default and explicit site scope across reads and writes.
+
 ## 0.1.3 — 2026-09-13
 
 - Replace Cheerio with its existing htmlparser2 parser for login forms, removing
