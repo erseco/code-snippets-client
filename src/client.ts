@@ -59,6 +59,7 @@ function snippet(value: unknown): Snippet {
     typeof s.desc !== "string" ||
     typeof s.network !== "boolean" ||
     (s.trashed !== undefined && typeof s.trashed !== "boolean") ||
+    (s.locked !== undefined && typeof s.locked !== "boolean") ||
     !Number.isSafeInteger(s.priority) ||
     !Array.isArray(s.tags) ||
     !s.tags.every((t) => typeof t === "string")
@@ -66,6 +67,25 @@ function snippet(value: unknown): Snippet {
     throw new CodeSnippetsError("RESPONSE", "Invalid snippet response");
   }
   return { ...s, code: s.code.replace(/\r\n/g, "\n") } as unknown as Snippet;
+}
+/**
+ * Code Snippets restores the stored code and name inside save_snippet() when a
+ * snippet was locked and stays locked, and still answers with HTTP 200. Report
+ * which protected field a save would silently discard, comparing code with the
+ * same CRLF normalization applied to snippet responses.
+ */
+function lockedField(
+  changes: Partial<SnippetInput>,
+  stored: Snippet,
+): "code" | "name" | undefined {
+  if (!stored.locked) return undefined;
+  if (
+    changes.code !== undefined &&
+    changes.code.replace(/\r\n/g, "\n") !== stored.code
+  )
+    return "code";
+  if (changes.name !== undefined && changes.name !== stored.name) return "name";
+  return undefined;
 }
 
 export class CodeSnippetsClient {
@@ -245,6 +265,14 @@ export class CodeSnippetsClient {
     if (!Object.keys(changes).length)
       throw new CodeSnippetsError("VALIDATION", "No changes supplied");
     const remote = await this.get(id);
+    // Unlocking in the same request lifts the protection; never write otherwise.
+    const refused =
+      changes.locked === false ? undefined : lockedField(changes, remote);
+    if (refused)
+      throw new CodeSnippetsError(
+        "STATE",
+        `Snippet ${id} is locked; unlock it before changing its ${refused}.`,
+      );
     const payload: Record<string, unknown> = {};
     for (const field of fields)
       if (remote[field] !== undefined) payload[field] = remote[field];
@@ -264,6 +292,14 @@ export class CodeSnippetsClient {
     ) {
       result = await this.activate(id);
     }
+    // GET and POST are not a transaction: a concurrent lock can discard the
+    // protected fields even though the preflight check allowed the request.
+    const discarded = lockedField(changes, result);
+    if (discarded)
+      throw new CodeSnippetsError(
+        "STATE",
+        `Snippet ${id} is locked; its ${discarded} was not updated.`,
+      );
     this.checkState(
       result,
       changes.active ?? (singleUse ? undefined : remote.active),

@@ -33,6 +33,17 @@ to restore activation once and verifies the result. When changing from/to
 retried. An explicit single-use activation may return `active: false` because the
 verification read already consumed the execution; verify its application-specific effect.
 
+Code Snippets 3.10.0 and later restore the stored `code` and `name` when a snippet was
+locked and the save keeps it locked, answering HTTP 200 without applying them. `update`
+therefore rejects a different `code` or `name` for a locked snippet with a `STATE` error
+before writing, and rejects it again after the write if the saved snippet is still locked
+and the requested value was not applied, so a lock set between the read and the write
+cannot report success. Equivalent values are not a conflict: `code` is compared after
+CRLF normalization. Metadata the plugin still allows, such as `desc`, `tags`, `priority`,
+`scope` or `active`, remains editable while locked, and `locked: false` in the same
+update unlocks the snippet and applies the new `code` or `name`. Code Snippets 3.9.6 has
+no locking and omits `locked`; its absence is not `false`.
+
 `delete` follows the installed plugin API. In 3.10.2 it trashes first, then
 permanently deletes an already trashed snippet. In 3.9.6 it only trashes. It never
 retries automatically. See [older plugin APIs](#older-plugin-apis).
