@@ -6,8 +6,8 @@
   3.10.0+ restores both fields inside `save_snippet()` and still answers HTTP 200.
 - Verify those fields after writing, before any activation recovery, so a lock set
   between the read and the write cannot report a silent success.
-- Send `locked` only when supplied: preserving the value read before the write would
-  clear a lock another process set in between.
+- Send `locked` only when explicitly supplied, instead of resending the stale value
+  read before the write.
 - Keep metadata editable while locked and support unlocking and editing in one update.
 - Validate the optional `locked` field in responses; 3.9.6 has no locking and omits it.
 

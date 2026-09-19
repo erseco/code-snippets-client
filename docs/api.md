@@ -38,9 +38,11 @@ locked and the save keeps it locked, answering HTTP 200 without applying them. `
 therefore rejects a different `code` or `name` for a locked snippet with a `STATE` error
 before writing, and rejects it again after the write if the saved snippet is still locked
 and the requested value was not applied, so a lock set between the read and the write
-cannot report success. `locked` itself is sent only when you supply it, so an update
-never resets a lock another process set after the read. Equivalent values are not a
-conflict: `code` is compared after CRLF normalization. Metadata the plugin still allows, such as `desc`, `tags`, `priority`,
+cannot report success. `locked` itself is sent only when explicitly supplied, so the
+client does not overwrite a lock with the stale value from its initial GET. As with
+every other field, GET/POST is not transactional and concurrent server-side changes
+cannot be fully serialized by a client. Equivalent values are not a conflict: `code`
+is compared after CRLF normalization. Metadata the plugin still allows, such as `desc`, `tags`, `priority`,
 `scope` or `active`, remains editable while locked, and `locked: false` in the same
 update unlocks the snippet and applies the new `code` or `name`. Code Snippets 3.9.6 has
 no locking and omits `locked`; its absence is not `false`.

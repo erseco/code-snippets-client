@@ -49,7 +49,11 @@ describe("Code Snippets REST contract", () => {
     delete legacy.trashed;
     const c = await setup((req, res) => json(res, legacy));
     expect(await c.get(7)).not.toHaveProperty("trashed");
+    expect(await c.get(7)).not.toHaveProperty("locked");
     legacy.trashed = "invalid";
+    await expect(c.get(7)).rejects.toMatchObject({ code: "RESPONSE" });
+    delete legacy.trashed;
+    legacy.locked = "yes";
     await expect(c.get(7)).rejects.toMatchObject({ code: "RESPONSE" });
   });
 
