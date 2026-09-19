@@ -274,13 +274,26 @@ export class CodeSnippetsClient {
         `Snippet ${id} is locked; unlock it before changing its ${refused}.`,
       );
     const payload: Record<string, unknown> = {};
-    for (const field of fields)
+    for (const field of fields) {
+      // The update controller only overwrites fields present in the request, so
+      // omitting the lock keeps the stored one: resending a stale false would
+      // undo a lock set after the read instead of detecting it.
+      if (field === "locked" && changes.locked === undefined) continue;
       if (remote[field] !== undefined) payload[field] = remote[field];
+    }
     Object.assign(payload, changes, { network: this.options.network ?? false });
     const singleUse =
       remote.scope === "single-use" || payload.scope === "single-use";
     if (singleUse && changes.active === undefined) delete payload.active;
     let result = snippet(await this.request(idPath(id), "POST", payload));
+    // GET and POST are not a transaction: a lock set after the read discards the
+    // protected fields. Report it before mutating the snippet any further.
+    const discarded = lockedField(changes, result);
+    if (discarded)
+      throw new CodeSnippetsError(
+        "STATE",
+        `Snippet ${id} is locked; its ${discarded} was not updated.`,
+      );
     // Saving code can deactivate a valid snippet through redeclaration in that request.
     // Never retry a single-use activation that may already have been consumed.
     if (
@@ -292,14 +305,6 @@ export class CodeSnippetsClient {
     ) {
       result = await this.activate(id);
     }
-    // GET and POST are not a transaction: a concurrent lock can discard the
-    // protected fields even though the preflight check allowed the request.
-    const discarded = lockedField(changes, result);
-    if (discarded)
-      throw new CodeSnippetsError(
-        "STATE",
-        `Snippet ${id} is locked; its ${discarded} was not updated.`,
-      );
     this.checkState(
       result,
       changes.active ?? (singleUse ? undefined : remote.active),

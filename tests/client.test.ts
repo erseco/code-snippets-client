@@ -153,9 +153,12 @@ describe("Code Snippets REST contract", () => {
     expect(writes).toHaveLength(0);
   });
   it("updates metadata and equivalent code while locked", async () => {
+    const posted: Record<string, unknown>[] = [];
     const c = await setup(async (req, res) => {
       if (req.method === "GET") return json(res, { ...sample, locked: true });
       const p = JSON.parse(await body(req)) as Record<string, unknown>;
+      posted.push(p);
+      // The controller keeps the stored lock for a request without the field, and
       // Code Snippets restores the protected fields of a snippet that stays locked.
       json(res, {
         ...sample,
@@ -166,6 +169,7 @@ describe("Code Snippets REST contract", () => {
       });
     });
     const updated = await c.update(7, { desc: "Updated description" });
+    expect(posted[0]).not.toHaveProperty("locked");
     expect(updated.locked).toBe(true);
     expect(updated.desc).toBe("Updated description");
     expect(updated.code).toBe(sample.code);
@@ -191,17 +195,34 @@ describe("Code Snippets REST contract", () => {
     expect(posted.every((p) => p.locked === false)).toBe(true);
   });
   it("detects a snippet locked between the read and the write", async () => {
-    const c = await setup((req, res) =>
+    const paths: string[] = [];
+    // A second process locks the snippet after the read; the update omits the
+    // lock, so the server keeps it and restores the protected fields.
+    let locked = false;
+    const c = await setup(async (req, res) => {
+      paths.push(req.url!);
+      if (req.method === "GET") {
+        const current = locked;
+        locked = true;
+        return json(res, { ...sample, locked: current });
+      }
+      const p = JSON.parse(await body(req)) as Record<string, unknown>;
+      expect(p).not.toHaveProperty("locked");
       json(res, {
         ...sample,
-        locked: req.method !== "GET",
-      }),
-    );
+        ...p,
+        locked: true,
+        code: sample.code,
+        active: false,
+      });
+    });
     const error = await c.update(7, { code: "secret()" }).catch((e) => e);
     expect(error).toBeInstanceOf(CodeSnippetsError);
     expect(error.code).toBe("STATE");
     expect(error.message).toContain("was not updated");
     expect(error.message).not.toContain("secret");
+    // A discarded write is not followed by another mutation.
+    expect(paths.some((p) => p.includes("activate"))).toBe(false);
   });
   it("does not activate inactive snippets and handles explicit state", async () => {
     const c = await setup(async (req, res) => {
