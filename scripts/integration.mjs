@@ -131,6 +131,47 @@ try {
   await fetch(baseUrl);
   const count = wp("--skip-plugins", "option", "get", key);
   assert.match(count, /(?:^|\n)1\s*(?:\n|$)/);
+  // Locking exists from Code Snippets 3.10.0; 3.9.6 omits the field entirely.
+  if (created.locked !== undefined) {
+    const lockedName = key + "_locked";
+    const guard = (value) =>
+      `if (!function_exists('${lockedName}')) { function ${lockedName}() { return ${value}; } }`;
+    const snippet = await client.create({
+      name: lockedName,
+      code: guard(1),
+      desc: "before lock",
+    });
+    ids.push(snippet.id);
+    assert.equal((await client.activate(snippet.id)).active, true);
+    const locked = await client.update(snippet.id, { locked: true });
+    assert.equal(locked.locked, true);
+    const storedCode = locked.code;
+    await assert.rejects(() => client.update(snippet.id, { code: guard(2) }), {
+      code: "STATE",
+    });
+    await assert.rejects(
+      () => client.update(snippet.id, { name: lockedName + "_renamed" }),
+      { code: "STATE" },
+    );
+    const unchanged = await client.get(snippet.id);
+    assert.equal(unchanged.code, storedCode);
+    assert.equal(unchanged.name, lockedName);
+    assert.equal(unchanged.locked, true);
+    const described = await client.update(snippet.id, {
+      desc: "locked metadata",
+    });
+    assert.equal(described.desc, "locked metadata");
+    assert.equal(described.locked, true);
+    assert.equal(described.code, storedCode);
+    assert.equal(described.active, true);
+    const unlocked = await client.update(snippet.id, {
+      locked: false,
+      code: guard(2),
+    });
+    assert.equal(unlocked.locked, false);
+    assert.equal(unlocked.code, guard(2));
+    assert.equal(unlocked.active, true);
+  }
   if (created.trashed === undefined) {
     assert.equal(await client.delete(created.id), null);
     await assert.rejects(() => client.restore(created.id), { status: 404 });
@@ -147,7 +188,7 @@ try {
     ids.splice(ids.indexOf(created.id), 1);
   }
   console.log(
-    "PASS: WordPress / Code Snippets integration: CRUD, metadata, double declaration, application password, login, permissions, single-use and supported trash/restore/delete operations.",
+    "PASS: WordPress / Code Snippets integration: CRUD, metadata, double declaration, application password, login, permissions, single-use, locked snippets where supported and supported trash/restore/delete operations.",
   );
 } finally {
   for (const id of ids) {

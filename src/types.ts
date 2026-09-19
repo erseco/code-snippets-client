@@ -21,6 +21,8 @@ export interface Snippet extends SnippetInput {
   network: boolean;
   /** Absent in older plugin APIs, including 3.9.6; absence does not mean false. */
   trashed?: boolean;
+  /** Locking exists from 3.10.0; 3.9.6 omits it and has no locking at all. */
+  locked?: boolean;
   code_error?: unknown;
 }
 export type Authentication =
