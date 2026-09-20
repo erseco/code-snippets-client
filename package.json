@@ -61,7 +61,7 @@
     "test:cas": "node scripts/cas-integration.mjs"
   },
   "dependencies": {
-    "htmlparser2": "10.1.0",
+    "htmlparser2": "12.0.0",
     "tough-cookie": "6.0.2"
   },
   "devDependencies": {
