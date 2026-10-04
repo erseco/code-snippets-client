@@ -65,12 +65,12 @@
     "tough-cookie": "6.0.2"
   },
   "devDependencies": {
-    "@types/node": "26.6.2",
-    "@vitest/coverage-v8": "5.0.1",
+    "@types/node": "26.6.3",
+    "@vitest/coverage-v8": "5.0.3",
     "@wordpress/env": "11.16.0",
     "prettier": "3.9.9",
     "typescript": "7.0.2",
-    "vitest": "5.0.1"
+    "vitest": "5.0.3"
   },
   "overrides": {
     "qs": "^6.16.0",
