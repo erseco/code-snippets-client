@@ -6,6 +6,8 @@
   route of the same site with the configured authentication, for routes that
   snippets register. Validates the route, method and query before any request;
   errors carry the HTTP status, never the body.
+- Export `clientOptions(env)`, the CLI's mapping of `WP_*`/`CAS_*` variables, for
+  scripts that build their own client from an explicit `.env`.
 
 ## 0.1.7 — 2026-09-19
 

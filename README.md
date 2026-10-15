@@ -60,6 +60,10 @@ await client.rest("/my-plugin/v1/items/42/close", { method: "POST" });
 `DELETE`, a JSON `body` and string `query` values. Errors carry the HTTP status
 only, never the response body.
 
+Scripts that read the same variables as the CLI can build the client with
+`new CodeSnippetsClient(clientOptions(env))`, where `env` comes from an explicit
+`.env` parsed with `node:util` `parseEnv`.
+
 ## CLI for developers and agents
 
 The CLI uses the same client. It only reads the explicitly selected `.env` file;
