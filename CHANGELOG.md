@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0 — 2026-10-15
+
+- Add `CodeSnippetsClient.rest(route, { method, body, query })` to call any REST
+  route of the same site with the configured authentication, for routes that
+  snippets register. Validates the route, method and query before any request;
+  errors carry the HTTP status, never the body.
+- Export `clientOptions(env)`, the CLI's mapping of `WP_*`/`CAS_*` variables, for
+  scripts that build their own client from an explicit `.env`.
+
 ## 0.1.7 — 2026-09-19
 
 - Reject updates that change the `code` or `name` of a locked snippet: Code Snippets

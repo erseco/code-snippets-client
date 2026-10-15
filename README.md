@@ -47,6 +47,23 @@ New snippets are **inactive by default**. Updates preserve unspecified fields an
 remote activation state. `single-use` snippets are never implicitly rearmed.
 The library does not load `.env`, write backups or run Git commands.
 
+Routes that a snippet registers on the same site can use the same session:
+
+```ts
+const pending = await client.rest("/my-plugin/v1/items", {
+  query: { status: "pending" },
+});
+await client.rest("/my-plugin/v1/items/42/close", { method: "POST" });
+```
+
+`rest()` accepts a route starting with `/`, `GET`, `POST`, `PUT`, `PATCH` or
+`DELETE`, a JSON `body` and string `query` values. Errors carry the HTTP status
+only, never the response body.
+
+Scripts that read the same variables as the CLI can build the client with
+`new CodeSnippetsClient(clientOptions(env))`, where `env` comes from an explicit
+`.env` parsed with `node:util` `parseEnv`.
+
 ## CLI for developers and agents
 
 The CLI uses the same client. It only reads the explicitly selected `.env` file;

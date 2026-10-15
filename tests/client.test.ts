@@ -428,3 +428,64 @@ it("rejects invalid User-Agent values before any request", () => {
     ).toThrow(/User-Agent/);
   }
 });
+
+describe("Generic REST requests", () => {
+  it("sends authenticated JSON to any route of the same site", async () => {
+    const seen: string[] = [];
+    const client = await setup(async (req, res) => {
+      const u = new URL(req.url!, "http://test");
+      expect(u.pathname).toBe("/subsite/");
+      expect(req.headers.authorization).toBe("Basic dTpw");
+      seen.push(
+        `${req.method} ${u.searchParams.get("rest_route")} ${u.searchParams.get("estado") ?? ""} ${await body(req)}`,
+      );
+      if (u.searchParams.get("rest_route") === "/rvc/v1/incidents/9/reply")
+        return json(res, { code: "rvc_empty_reply", message: "secret" }, 400);
+      json(res, { ok: true });
+    });
+    expect(
+      await client.rest("/rvc/v1/incidents", { query: { estado: "answered" } }),
+    ).toEqual({ ok: true });
+    await client.rest("/rvc/v1/incidents/7/review", {
+      method: "post" as "POST",
+    });
+    const error = await client
+      .rest("/rvc/v1/incidents/9/reply", {
+        method: "POST",
+        body: { texto: "" },
+      })
+      .catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(CodeSnippetsError);
+    expect((error as CodeSnippetsError).status).toBe(400);
+    expect((error as CodeSnippetsError).message).not.toContain("secret");
+    expect(seen).toEqual([
+      "GET /rvc/v1/incidents answered ",
+      "POST /rvc/v1/incidents/7/review  ",
+      'POST /rvc/v1/incidents/9/reply  {"texto":""}',
+    ]);
+  });
+  it("validates route, method and query before any request", async () => {
+    let calls = 0;
+    const client = await setup((_req, res) => {
+      calls++;
+      json(res, {});
+    });
+    for (const route of [
+      "rvc/v1/x",
+      "//evil.example/x",
+      "/a?b=c",
+      "/a#b",
+      "/a b",
+    ])
+      await expect(client.rest(route)).rejects.toMatchObject({
+        code: "VALIDATION",
+      });
+    await expect(
+      client.rest("/a", { method: "TRACE" as "GET" }),
+    ).rejects.toMatchObject({ code: "VALIDATION" });
+    await expect(
+      client.rest("/a", { query: { rest_route: "/other" } }),
+    ).rejects.toMatchObject({ code: "VALIDATION" });
+    expect(calls).toBe(0);
+  });
+});

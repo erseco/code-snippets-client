@@ -191,3 +191,17 @@ it("maps the CLI timeout and rejects invalid values before networking", () => {
     ).toThrow("Invalid timeout");
   }
 });
+
+it("exports the CLI environment mapping from the package entry", async () => {
+  const pkg = await import("../src/index.js");
+  expect(
+    pkg.clientOptions({
+      WP_URL: "https://example.org",
+      WP_USERNAME: "u",
+      WP_PASSWORD: "p",
+    }),
+  ).toMatchObject({
+    baseUrl: "https://example.org",
+    auth: { type: "application-password", username: "u", password: "p" },
+  });
+});
