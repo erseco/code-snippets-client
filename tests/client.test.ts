@@ -437,31 +437,31 @@ describe("Generic REST requests", () => {
       expect(u.pathname).toBe("/subsite/");
       expect(req.headers.authorization).toBe("Basic dTpw");
       seen.push(
-        `${req.method} ${u.searchParams.get("rest_route")} ${u.searchParams.get("estado") ?? ""} ${await body(req)}`,
+        `${req.method} ${u.searchParams.get("rest_route")} ${u.searchParams.get("status") ?? ""} ${await body(req)}`,
       );
-      if (u.searchParams.get("rest_route") === "/rvc/v1/incidents/9/reply")
-        return json(res, { code: "rvc_empty_reply", message: "secret" }, 400);
+      if (u.searchParams.get("rest_route") === "/example/v1/items/9/rename")
+        return json(res, { code: "example_invalid", message: "secret" }, 400);
       json(res, { ok: true });
     });
     expect(
-      await client.rest("/rvc/v1/incidents", { query: { estado: "answered" } }),
+      await client.rest("/example/v1/items", { query: { status: "open" } }),
     ).toEqual({ ok: true });
-    await client.rest("/rvc/v1/incidents/7/review", {
+    await client.rest("/example/v1/items/7/close", {
       method: "post" as "POST",
     });
     const error = await client
-      .rest("/rvc/v1/incidents/9/reply", {
+      .rest("/example/v1/items/9/rename", {
         method: "POST",
-        body: { texto: "" },
+        body: { title: "" },
       })
       .catch((e: unknown) => e);
     expect(error).toBeInstanceOf(CodeSnippetsError);
     expect((error as CodeSnippetsError).status).toBe(400);
     expect((error as CodeSnippetsError).message).not.toContain("secret");
     expect(seen).toEqual([
-      "GET /rvc/v1/incidents answered ",
-      "POST /rvc/v1/incidents/7/review  ",
-      'POST /rvc/v1/incidents/9/reply  {"texto":""}',
+      "GET /example/v1/items open ",
+      "POST /example/v1/items/7/close  ",
+      'POST /example/v1/items/9/rename  {"title":""}',
     ]);
   });
   it("validates route, method and query before any request", async () => {
@@ -471,7 +471,7 @@ describe("Generic REST requests", () => {
       json(res, {});
     });
     for (const route of [
-      "rvc/v1/x",
+      "example/v1/x",
       "//evil.example/x",
       "/a?b=c",
       "/a#b",
