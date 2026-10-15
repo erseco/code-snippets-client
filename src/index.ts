@@ -5,6 +5,7 @@ export type {
   Authentication,
   ClientOptions,
   ListOptions,
+  RestOptions,
   Snippet,
   SnippetInput,
 } from "./types.js";

@@ -4,9 +4,12 @@ import { checkedUrl, Session } from "./session.js";
 import type {
   ClientOptions,
   ListOptions,
+  RestOptions,
   Snippet,
   SnippetInput,
 } from "./types.js";
+
+const REST_METHODS = new Set(["GET", "POST", "PUT", "PATCH", "DELETE"]);
 
 const fields = [
   "name",
@@ -166,20 +169,49 @@ export class CodeSnippetsClient {
     });
     return this.loginPromise;
   }
-  private async request(
+  private request(
     path: string,
     method = "GET",
     body?: unknown,
     query: Record<string, string> = {},
   ): Promise<unknown> {
-    const url = new URL(this.base);
-    url.searchParams.set(
-      "rest_route",
-      `/code-snippets/v1/snippets${path ? "/" + path : ""}`,
-    );
     // Legacy controllers do not sanitize this query: PHP treats "false" as true.
     // Missing selects site snippets; keep explicit booleans in JSON write bodies.
-    if (this.options.network) url.searchParams.set("network", "true");
+    const scoped = this.options.network ? { network: "true", ...query } : query;
+    return this.send(
+      `/code-snippets/v1/snippets${path ? "/" + path : ""}`,
+      method,
+      body,
+      scoped,
+    );
+  }
+  /**
+   * Send an authenticated request to any REST route of the same site, such as
+   * a route registered by a snippet. Uses the session and nonce of the
+   * configured authentication. Errors carry the HTTP status, never the body.
+   */
+  async rest(route: string, options: RestOptions = {}): Promise<unknown> {
+    if (
+      !/^\/[A-Za-z0-9._~!$&'()*+,;=:@%/-]*$/.test(route) ||
+      route.includes("//")
+    )
+      throw new CodeSnippetsError("VALIDATION", "Invalid REST route");
+    const method = (options.method ?? "GET").toUpperCase();
+    if (!REST_METHODS.has(method))
+      throw new CodeSnippetsError("VALIDATION", "Invalid HTTP method");
+    for (const [key, value] of Object.entries(options.query ?? {}))
+      if (key === "rest_route" || typeof value !== "string")
+        throw new CodeSnippetsError("VALIDATION", "Invalid query parameter");
+    return this.send(route, method, options.body, options.query ?? {});
+  }
+  private async send(
+    route: string,
+    method: string,
+    body: unknown,
+    query: Record<string, string>,
+  ): Promise<unknown> {
+    const url = new URL(this.base);
+    url.searchParams.set("rest_route", route);
     for (const [key, value] of Object.entries(query))
       url.searchParams.set(key, value);
     const headers = new Headers(await this.headers());

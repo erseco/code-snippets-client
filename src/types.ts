@@ -54,3 +54,11 @@ export interface ListOptions {
   search?: string;
   status?: "all" | "active" | "inactive";
 }
+
+/** Options of CodeSnippetsClient.rest(). */
+export interface RestOptions {
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  /** Sent as JSON. */
+  body?: unknown;
+  query?: Record<string, string>;
+}
