@@ -2,8 +2,9 @@
 
 ## Unreleased
 
-- Claude Security scan of `8f177b8` on 2026-10-20: no findings across `src`,
-  `scripts` and `.github`; `tests` and `docs` were skipped as non-shipped code.
+- Claude Security scan of `8f177b8` on 2026-10-20 with Claude Mythos 5.1: no
+  findings across `src`, `scripts` and `.github`; `tests` and `docs` were
+  skipped as non-shipped code.
 - Type `validateSnippetInput(input)` as accepting `unknown` and asserting
   `Partial<SnippetInput>`; the runtime check is unchanged.
 
