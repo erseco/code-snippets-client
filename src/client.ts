@@ -31,7 +31,9 @@ function idPath(id: number): string {
     );
   return String(id);
 }
-export function validateSnippetInput(input: Partial<SnippetInput>): void {
+export function validateSnippetInput(
+  input: unknown,
+): asserts input is Partial<SnippetInput> {
   if (!input || typeof input !== "object" || Array.isArray(input))
     throw new CodeSnippetsError("VALIDATION", "Expected snippet fields");
   for (const [key, value] of Object.entries(input)) {

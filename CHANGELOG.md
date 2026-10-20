@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Type `validateSnippetInput(input)` as accepting `unknown` and asserting
+  `Partial<SnippetInput>`; the runtime check is unchanged.
+
 ## 0.2.0 — 2026-10-15
 
 - Add `CodeSnippetsClient.rest(route, { method, body, query })` to call any REST

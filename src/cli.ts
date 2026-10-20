@@ -28,13 +28,10 @@ CAS_LOGIN_URL, CAS_SERVICE_URL, CAS_ENTRY_URL, WP_COOKIE, WP_NONCE.
 WP_ALLOW_HTTP=true is for disposable local tests only.
 `;
 
-function boolean(
-  env: Record<string, string | undefined>,
-  key: string,
-): boolean {
-  if (env[key] !== undefined && !["true", "false"].includes(env[key]!))
+function boolean(value: string | undefined, key: string): boolean {
+  if (value !== undefined && !["true", "false"].includes(value))
     throw new CodeSnippetsError("CONFIG", `${key} must be true or false`);
-  return env[key] === "true";
+  return value === "true";
 }
 export function clientOptions(
   env: Record<string, string | undefined>,
@@ -61,8 +58,8 @@ export function clientOptions(
   return {
     baseUrl: env.WP_URL ?? "",
     auth,
-    network: boolean(env, "WP_NETWORK"),
-    allowInsecureHttp: boolean(env, "WP_ALLOW_HTTP"),
+    network: boolean(env.WP_NETWORK, "WP_NETWORK"),
+    allowInsecureHttp: boolean(env.WP_ALLOW_HTTP, "WP_ALLOW_HTTP"),
     ...(env.WP_TIMEOUT_MS !== undefined
       ? { timeoutMs: Number(env.WP_TIMEOUT_MS) }
       : {}),
@@ -105,7 +102,7 @@ export async function runCli(
     },
   });
   if (values.help || !positionals.length) return help;
-  const [command, idText, ...extra] = positionals;
+  const [command = "", idText, ...extra] = positionals;
   const commands = [
     "list",
     "get",
@@ -119,16 +116,16 @@ export async function runCli(
     "delete",
     "restore",
   ];
-  if (!commands.includes(command!) || extra.length)
+  if (!commands.includes(command) || extra.length)
     throw new CodeSnippetsError("VALIDATION", "Invalid command or arguments");
-  const needsId = !["list", "create"].includes(command!);
+  const needsId = !["list", "create"].includes(command);
   const id = Number(idText);
   if (needsId ? !Number.isSafeInteger(id) || id <= 0 : idText !== undefined)
     throw new CodeSnippetsError(
       "VALIDATION",
       "Provide an ID only for commands operating on an existing snippet",
     );
-  const mutation = !["list", "get", "pull", "diff"].includes(command!);
+  const mutation = !["list", "get", "pull", "diff"].includes(command);
   if (mutation && !values.yes && !values["dry-run"])
     throw new CodeSnippetsError(
       "VALIDATION",
@@ -139,7 +136,7 @@ export async function runCli(
       "VALIDATION",
       "--enable and --disable are mutually exclusive",
     );
-  const writeFields = ["create", "update", "push"].includes(command!);
+  const writeFields = ["create", "update", "push"].includes(command);
   if (
     !writeFields &&
     (values.input ||
