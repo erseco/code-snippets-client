@@ -62,7 +62,7 @@
   },
   "dependencies": {
     "htmlparser2": "12.0.0",
-    "tough-cookie": "6.0.2"
+    "tough-cookie": "6.1.0"
   },
   "devDependencies": {
     "@types/node": "26.6.6",
