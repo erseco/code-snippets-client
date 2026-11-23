@@ -28,8 +28,8 @@ this disposable environment.
 
 ## Compatibility tests
 
-Required CI runs 14 WordPress jobs: the latest pinned patches of WordPress 6.9,
-7.0 and 7.1 with PHP 8.3/8.4 and Code Snippets 3.9.6 plus the latest pinned
+Required CI runs 20 WordPress jobs: the latest pinned patches of WordPress 6.9,
+7.0 and 7.1 with PHP 8.3/8.4 and Code Snippets 3.9.6, 3.10.2 plus the latest pinned
 plugin release, as well as the fixed
 WordPress 6.9.5 / Code Snippets 3.9.6 baseline on both PHP versions. The baseline
 must not be advanced automatically when newer patches become available.

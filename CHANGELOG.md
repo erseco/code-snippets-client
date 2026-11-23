@@ -5,6 +5,9 @@
 - Remove the npm `overrides` for transitive development dependencies of
   `@wordpress/env` and follow its own dependency ranges. The published package
   is unaffected: `npm audit --omit=dev` reports nothing.
+- Test against Code Snippets 4.1.0 as the latest plugin lane, keeping 3.10.2 as
+  a fixed lane, and advance the CI WordPress pins to 6.9.12, 7.0.9 and 7.1.5.
+  No client change was needed for 4.1.0.
 - Add the `wp-code-snippets` agent skill in `skills/`, following the
   [Agent Skills](https://agentskills.io/specification) format, so coding agents
   use the CLI safely. It is not part of the npm package.
