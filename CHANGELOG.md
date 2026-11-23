@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Override the development-only transitive dependencies `isomorphic-git`, `qs`
+  and `body-parser` of `@wordpress/env` to patched releases. The published
+  package has no runtime exposure: `npm audit --omit=dev` reports nothing.
 - Add the `wp-code-snippets` agent skill in `skills/`, following the
   [Agent Skills](https://agentskills.io/specification) format, so coding agents
   use the CLI safely. It is not part of the npm package.
