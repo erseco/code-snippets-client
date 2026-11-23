@@ -89,6 +89,13 @@ request on slow servers. The default is 30000 ms, including redirects and respon
 reading. Values must be integers from 1 to 2147483647. No retries are added.
 See [authentication configuration](docs/authentication.md).
 
+Agents can load the [`wp-code-snippets` skill](skills/wp-code-snippets/SKILL.md),
+which covers the safe publishing flow and the pitfalls:
+
+```sh
+gh skill install erseco/code-snippets-client wp-code-snippets
+```
+
 [API and CLI reference](docs/api.md) · [Authentication and CAS](docs/authentication.md) ·
 [Architecture and limits](docs/architecture.md) · [Development and releases](docs/development.md)
 
