@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add the `wp-code-snippets` agent skill in `skills/`, following the
+  [Agent Skills](https://agentskills.io/specification) format, so coding agents
+  use the CLI safely. It is not part of the npm package.
 - Claude Security scan of `8f177b8` on 2026-10-20 with Claude Mythos 5.1: no
   findings across `src`, `scripts` and `.github`; `tests` and `docs` were
   skipped as non-shipped code.
