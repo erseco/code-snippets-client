@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.2.1 — 2026-11-23
+
 - Remove the npm `overrides` for transitive development dependencies of
   `@wordpress/env` and follow its own dependency ranges. The published package
   is unaffected: `npm audit --omit=dev` reports nothing.
